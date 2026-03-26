@@ -100,9 +100,9 @@ border-bottom:1px solid rgba(255,255,255,.06);}
 /* WINNER OVERLAY */
 .wover{position:fixed;inset:0;display:flex;flex-direction:column;
 align-items:center;justify-content:center;gap:4px;
-background:rgba(0,0,0,.93);backdrop-filter:blur(16px);
+background:rgba(0,0,0,.93);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
 z-index:100;opacity:0;pointer-events:none;transition:opacity .5s;}
-.wover.on{opacity:1;}
+.wover.on{opacity:1;pointer-events:auto;}
 .wcrown{font-size:3.5rem;animation:crb .55s ease infinite alternate;}
 @keyframes crb{from{transform:translateY(0) rotate(-6deg)}to{transform:translateY(-8px) rotate(6deg)}}
 .wflag{font-size:4.5rem;animation:flp .8s ease infinite alternate;}
@@ -425,11 +425,12 @@ const fB=document.getElementById('fB');
 
 let CW=0,CH=0;
 function initCv(){
-  CW=Math.min(560,window.innerWidth-20);
+  CW=Math.min(560,(document.documentElement.clientWidth||window.innerWidth)-20);
   CH=Math.round(CW*0.58);
   cv.width=CW;cv.height=CH;
-  // No style needed — canvas block element fills width naturally
+  cv.style.width=CW+'px';cv.style.height=CH+'px';
 }
+window.addEventListener('resize',initCv);
 
 const R=()=>Math.max(9,Math.round(CW*0.021));
 const rnd=(a,b)=>a+Math.random()*(b-a);
