@@ -725,7 +725,7 @@ function onWin(winnerSide){
   launchConfetti();
   playVictory();
   document.getElementById('wover').classList.add('on');
-  let c=8;document.getElementById('cd').textContent=c;
+  let c=4;document.getElementById('cd').textContent=c;
   const iv=setInterval(()=>{c--;document.getElementById('cd').textContent=c;
     if(c<=0){clearInterval(iv);nextRound();}},1000);
   timers.push(iv);
