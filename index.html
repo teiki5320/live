@@ -123,6 +123,25 @@ animation:flt 1s ease infinite alternate;}
 .cfw{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:99;}
 .cp{position:absolute;top:-16px;animation:cpf linear forwards;}
 @keyframes cpf{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* EVENT CARD */
+.ecard{width:100%;max-width:560px;background:#18181f;
+  border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
+.ehdr{padding:9px 14px;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid rgba(255,255,255,.08);}
+.elbl{font-size:.58rem;letter-spacing:.25em;color:rgba(232,232,238,.35)}
+.ecd{font-size:1.1rem;font-weight:700;color:#e8e8ee;transition:color .4s;letter-spacing:.04em;}
+.ecd.ecd-warn{color:#f5c400;animation:epulse 1s ease infinite;}
+.ecd.ecd-crit{color:#e63946;animation:epulse .4s ease infinite;}
+@keyframes epulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.18);opacity:.7}}
+.ewin-wrap{padding:4px 12px 10px;}
+.ewin{height:46px;overflow:hidden;position:relative;background:rgba(255,255,255,.03);border-radius:8px;}
+.ewin::before,.ewin::after{content:'';position:absolute;left:0;right:0;z-index:2;height:14px;pointer-events:none}
+.ewin::before{top:0;background:linear-gradient(to bottom,#18181f 30%,transparent)}
+.ewin::after{bottom:0;background:linear-gradient(to top,#18181f,transparent)}
+.ereel{display:flex;flex-direction:column;}
+.eitem{height:46px;display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;font-weight:700;white-space:nowrap;gap:6px;flex-shrink:0;width:100%;}
 </style>
 
 </head>
@@ -151,6 +170,16 @@ animation:flt 1s ease infinite alternate;}
   <div class="scard" style="text-align:right">
     <div class="stitle">PAYS B</div>
     <div class="swin"><div class="sreel" id="reelB"><div class="sitem" style="justify-content:flex-end">—</div></div></div>
+  </div>
+</section>
+
+<section class="ecard">
+  <div class="ehdr">
+    <div class="elbl">PROCHAIN ÉVÉNEMENT</div>
+    <div class="ecd" id="ecd">60s</div>
+  </div>
+  <div class="ewin-wrap">
+    <div class="ewin"><div class="ereel" id="ereel"><div class="eitem">—</div></div></div>
   </div>
 </section>
 
