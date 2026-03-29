@@ -16,7 +16,7 @@ body{
 
 /* HEADER */
 .hdr{
-width:100%;max-width:560px;background:#18181f;
+width:100%;max-width:800px;background:#18181f;
 border:1px solid rgba(255,255,255,.08);border-radius:14px;
 padding:12px 16px;display:flex;justify-content:space-between;align-items:center;
 }
@@ -32,7 +32,7 @@ text-transform:uppercase;}
 
 /* SLOTS */
 .slots{
-width:100%;max-width:560px;
+width:100%;max-width:800px;
 display:grid;grid-template-columns:1fr 40px 1fr;gap:8px;align-items:center;
 }
 .scard{background:#18181f;border:1px solid rgba(255,255,255,.08);
@@ -53,7 +53,7 @@ width:100%;text-align:center;
 .vs{font-size:1rem;font-weight:900;color:rgba(232,232,238,.3);text-align:center;letter-spacing:.1em}
 
 /* DUEL CARD */
-.dcard{width:100%;max-width:560px;background:#18181f;
+.dcard{width:100%;max-width:800px;background:#18181f;
 border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
 .dhdr{padding:9px 14px;display:flex;justify-content:space-between;align-items:center;
 border-bottom:1px solid rgba(255,255,255,.08);}
@@ -81,7 +81,7 @@ letter-spacing:.16em;color:rgba(245,196,0,.85);text-align:center;
 border-top:1px solid rgba(255,255,255,.08);transition:opacity .2s;}
 
 /* RANKING */
-.ranks{width:100%;max-width:560px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ranks{width:100%;max-width:800px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 @media(max-width:400px){.ranks{grid-template-columns:1fr;}}
 .rcard{width:100%;background:#18181f;
 border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
@@ -119,6 +119,20 @@ background:linear-gradient(135deg,#FFD700,#FF8C00,#FFD700);
 .wnxt{font-size:.65rem;letter-spacing:.16em;color:rgba(255,255,255,.2);margin-top:12px;
 animation:flt 1s ease infinite alternate;}
 @keyframes flt{from{opacity:.15}to{opacity:.6}}
+.wad{
+  width:90%;max-width:420px;margin-top:18px;
+  border:1px solid rgba(255,255,255,.12);border-radius:10px;
+  overflow:hidden;background:rgba(255,255,255,.04);
+}
+.wad-label{
+  font-size:.48rem;letter-spacing:.3em;color:rgba(255,255,255,.2);
+  padding:3px 10px;border-bottom:1px solid rgba(255,255,255,.07);
+  text-transform:uppercase;
+}
+.wad-content{
+  padding:12px 16px;font-size:.85rem;color:rgba(255,255,255,.55);
+  text-align:center;min-height:48px;display:flex;align-items:center;justify-content:center;
+}
 
 .cfw{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:99;}
 .cp{position:absolute;top:-16px;animation:cpf linear forwards;}
@@ -156,7 +170,7 @@ animation:flt 1s ease infinite alternate;}
   margin-top:20px;animation:hovfade 1.5s ease infinite alternate;}
 
 /* EVENT CARD */
-.ecard{width:100%;max-width:560px;background:#18181f;
+.ecard{width:100%;max-width:800px;background:#18181f;
   border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
 .ehdr{padding:9px 14px;display:flex;justify-content:space-between;align-items:center;
   border-bottom:1px solid rgba(255,255,255,.08);}
@@ -251,7 +265,13 @@ animation:flt 1s ease infinite alternate;}
   <div class="wlbl">VICTOIRE</div>
   <div class="wname" id="wname">—</div>
   <div class="wsub">Sa bille a atteint le trou en premier !</div>
-  <div class="wnxt">Prochain duel dans <span id="cd">4</span>s…</div>
+  <!-- ── ENCART PUBLICITAIRE — modifiez le contenu ci-dessous ── -->
+  <div class="wad" id="wad">
+    <div class="wad-label">SPONSORISÉ</div>
+    <div class="wad-content">Votre publicité ici</div>
+  </div>
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div class="wnxt">Prochain duel dans <span id="cd">2</span>s…</div>
 </div>
 
 <div class="hover" id="hover">
@@ -442,27 +462,25 @@ document.head.appendChild(styleRay);
 // ── SON (Web Audio API) ───────────────────────────────────────
 let AC = null;
 function getAC(){
-  if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
-  if(AC.state==='suspended') AC.resume();
+  if(!AC){
+    try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){return null;}
+  }
+  if(AC.state==='suspended')AC.resume();
   return AC;
 }
 
-// iOS unlock: create and resume AudioContext on first touch
+// Déverrouillage audio : créé et repris à chaque interaction utilisateur
 function unlockAudio(){
-  getAC();
-  // Play a silent buffer to fully unlock
+  if(!AC)try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
+  if(AC&&AC.state==='suspended')AC.resume();
   try{
-    const ac=getAC();
-    const buf=ac.createBuffer(1,1,22050);
-    const src=ac.createBufferSource();
-    src.buffer=buf;src.connect(ac.destination);
-    src.start(0);
+    const buf=AC.createBuffer(1,1,22050);
+    const src=AC.createBufferSource();
+    src.buffer=buf;src.connect(AC.destination);src.start(0);
   }catch(e){}
-  document.removeEventListener('touchstart',unlockAudio);
-  document.removeEventListener('click',unlockAudio);
 }
-document.addEventListener('touchstart',unlockAudio,{once:true});
-document.addEventListener('click',unlockAudio,{once:true});
+document.addEventListener('touchstart',unlockAudio);
+document.addEventListener('click',unlockAudio);
 
 function playTick(){
   try{
@@ -900,12 +918,12 @@ function applyEffect(b,ev){
     b.ghost=true;
     b.effect.timeout=setTimeout(()=>{b.ghost=false;b.effect=null;},8000);
   }else if(ev.id==='bighole'){
+    // Le trou reste grand jusqu'à la fin du round (reset dans nextRound)
     if(hole){
       if(!hole.baseR)hole.baseR=hole.r;
       hole.r=hole.baseR*2;
-      hole._bigTm=setTimeout(()=>{if(hole){hole.r=hole.baseR;hole.baseR=undefined;hole._bigTm=null;}b.effect=null;},8000);
-      b.effect.timeout=hole._bigTm;
     }
+    b.effect.timeout=null;
   }else if(ev.id==='boost'){
     const spd=Math.hypot(b.vx,b.vy)||SPD;
     b.vx=(b.vx/spd)*spd*2.5;b.vy=(b.vy/spd)*spd*2.5;b.boosted=true;
@@ -1092,7 +1110,7 @@ function onWin(winnerSide){
   launchConfetti();
   playVictory();
   document.getElementById('wover').classList.add('on');
-  let c=4;document.getElementById('cd').textContent=c;
+  let c=2;document.getElementById('cd').textContent=c;
   const iv=setInterval(()=>{c--;document.getElementById('cd').textContent=c;
     if(c<=0){clearInterval(iv);nextRound();}},1000);
   timers.push(iv);
