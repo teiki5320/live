@@ -124,6 +124,37 @@ animation:flt 1s ease infinite alternate;}
 .cp{position:absolute;top:-16px;animation:cpf linear forwards;}
 @keyframes cpf{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
 
+/* HOUR WINNER OVERLAY */
+.hover{position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+  background:#000;z-index:102;opacity:0;pointer-events:none;transition:opacity 1s;}
+.hover.on{opacity:1;pointer-events:auto;}
+.hov-glow{position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 40%,rgba(245,196,0,.18) 0%,transparent 65%);
+  animation:hovgl 2.4s ease infinite alternate;}
+@keyframes hovgl{from{opacity:.3;transform:scale(.95)}to{opacity:1;transform:scale(1.05)}}
+.hov-rays{position:absolute;inset:0;pointer-events:none;}
+.hov-crown{font-size:4.5rem;animation:hovcr .9s ease infinite alternate;
+  filter:drop-shadow(0 0 40px #FFD700) drop-shadow(0 0 80px #FF8C00);}
+@keyframes hovcr{from{transform:translateY(0) rotate(-4deg) scale(1)}to{transform:translateY(-14px) rotate(4deg) scale(1.12)}}
+.hov-title{font-size:.65rem;letter-spacing:.55em;color:rgba(245,196,0,.55);
+  text-transform:uppercase;margin-bottom:6px;animation:hovfade 1.5s ease infinite alternate;}
+@keyframes hovfade{from{opacity:.4}to{opacity:1}}
+.hov-flag{font-size:5.5rem;animation:hovfl .8s ease infinite alternate;
+  filter:drop-shadow(0 0 50px rgba(255,200,0,.9));}
+@keyframes hovfl{from{transform:scale(1) rotate(-2deg)}to{transform:scale(1.1) rotate(2deg)}}
+.hov-name{
+  font-size:2.8rem;font-weight:900;letter-spacing:.1em;margin-top:4px;
+  background:linear-gradient(135deg,#fff 0%,#FFD700 30%,#FF8C00 60%,#FFD700 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:hovnm 2s linear infinite;}
+@keyframes hovnm{to{background-position:200% center}}
+.hov-score{font-size:1.1rem;font-weight:700;letter-spacing:.16em;
+  color:rgba(245,196,0,.75);margin-top:2px;}
+.hov-sub{font-size:.62rem;letter-spacing:.2em;color:rgba(255,255,255,.2);
+  margin-top:20px;animation:hovfade 1.5s ease infinite alternate;}
+
 /* EVENT CARD */
 .ecard{width:100%;max-width:560px;background:#18181f;
   border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
@@ -220,8 +251,20 @@ animation:flt 1s ease infinite alternate;}
   <div class="wlbl">VICTOIRE</div>
   <div class="wname" id="wname">—</div>
   <div class="wsub">Sa bille a atteint le trou en premier !</div>
-  <div class="wnxt">Prochain duel dans <span id="cd">8</span>s…</div>
+  <div class="wnxt">Prochain duel dans <span id="cd">4</span>s…</div>
 </div>
+
+<div class="hover" id="hover">
+  <div class="hov-glow"></div>
+  <div class="hov-rays" id="hovRays"></div>
+  <div class="hov-crown">👑</div>
+  <div class="hov-title">VAINQUEUR DE L'HEURE</div>
+  <div class="hov-flag" id="hovFlag">🏳</div>
+  <div class="hov-name" id="hovName">—</div>
+  <div class="hov-score" id="hovScore"></div>
+  <div class="hov-sub">Nouveau départ dans <span id="hovCd">5</span>s…</div>
+</div>
+
 <div class="cfw" id="cfw"></div>
 
 <script>
@@ -311,16 +354,90 @@ function resetDaily(){
   renderRankD();updateMetaD();
 }
 
+// ── FIN D'HEURE — SUSPENSE & VAINQUEUR ───────────────────────
+function startHourlyDrama(){
+  clearInterval(hrDramaIv);
+  hrDramaSec=30;
+  hrDramaIv=setInterval(()=>{
+    hrDramaSec--;
+    const el=document.getElementById('rmetaH');
+    if(el){
+      const w=lastHWinner?`${lastHWinner.f} ${lastHWinner.n}`:'—';
+      const s=hrDramaSec;
+      el.textContent=`🏆 Fin de l'heure dans ${s}s ! | Leader : ${w}`;
+      el.style.color=s<=10?'#e63946':s<=20?'#f5c400':'rgba(232,232,238,.35)';
+    }
+    if(hrDramaSec<=0)clearInterval(hrDramaIv);
+  },1000);
+}
+
+function showHourWinner(onDone){
+  const top=Object.entries(SC_H).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])[0];
+  const ov=document.getElementById('hover');
+  if(!top){onDone&&onDone();return;}
+  const country=PAYS.find(p=>p.n===top[0])||{f:'🏆',n:top[0]};
+  document.getElementById('hovFlag').textContent=country.f;
+  document.getElementById('hovName').textContent=country.n.toUpperCase();
+  document.getElementById('hovScore').textContent=top[1]+` victoire${top[1]>1?'s':''} cette heure`;
+  // Rayons lumineux dynamiques
+  const rays=document.getElementById('hovRays');rays.innerHTML='';
+  for(let i=0;i<12;i++){
+    const d=document.createElement('div');
+    d.style.cssText=`position:absolute;left:50%;top:50%;width:2px;height:45vh;
+      background:linear-gradient(to top,rgba(255,196,0,.18),transparent);
+      transform-origin:0 0;transform:rotate(${i*30}deg);
+      animation:hovray ${1.5+i*.1}s ease infinite alternate;`;
+    rays.appendChild(d);
+  }
+  ov.classList.add('on');
+  playHourFanfare();
+  launchConfetti();
+  let c=5;document.getElementById('hovCd').textContent=c;
+  const iv=setInterval(()=>{
+    c--;document.getElementById('hovCd').textContent=c;
+    if(c<=0){
+      clearInterval(iv);
+      ov.classList.remove('on');
+      setTimeout(()=>{onDone&&onDone();},800);
+    }
+  },1000);
+}
+
 // ── PLANIFICATION DES RESETS ──────────────────────────────────
-(function scheduleResets(){
+function scheduleNextHour(){
   const now=new Date();
   const nextH=new Date(now);nextH.setHours(now.getHours()+1,0,0,0);
-  setTimeout(()=>{resetHourly();setInterval(resetHourly,3600000);},nextH-now);
+  const ms=nextH-now;
+  // Drama 30s avant
+  if(ms>30000)setTimeout(startHourlyDrama,ms-30000);
+  else startHourlyDrama();
+  // Reset à l'heure H
+  setTimeout(()=>{
+    clearInterval(hrDramaIv);
+    pauseEvCd();
+    showHourWinner(()=>{
+      resetHourly();
+      const el=document.getElementById('rmetaH');
+      if(el){el.style.color='';updateMetaH();}
+      if(!over)startEvCd();
+      scheduleNextHour();
+    });
+  },ms);
+}
+
+(function scheduleResets(){
+  scheduleNextHour();
+  const now=new Date();
   const nextMidnight=new Date(now);nextMidnight.setHours(24,0,0,0);
   setTimeout(()=>{resetDaily();setInterval(resetDaily,86400000);},nextMidnight-now);
 })();
 setInterval(updateMetaH,60000);
 updateMetaH();updateMetaD();
+
+// CSS dynamique pour les rayons
+const styleRay=document.createElement('style');
+styleRay.textContent='@keyframes hovray{from{opacity:.1}to{opacity:.5}}';
+document.head.appendChild(styleRay);
 
 // ── SON (Web Audio API) ───────────────────────────────────────
 let AC = null;
@@ -441,7 +558,89 @@ function playVictory(){
   }catch(e){}
 }
 
+function playEventDrum(){
+  try{
+    const ac=getAC();
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);o.type='sawtooth';
+    o.frequency.setValueAtTime(80,ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(440,ac.currentTime+.55);
+    g.gain.setValueAtTime(0,ac.currentTime);
+    g.gain.linearRampToValueAtTime(.35,ac.currentTime+.05);
+    g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.6);
+    o.start(ac.currentTime);o.stop(ac.currentTime+.6);
+    const buf=ac.createBuffer(1,ac.sampleRate*.08,ac.sampleRate);
+    const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    const src=ac.createBufferSource(),g2=ac.createGain();
+    src.buffer=buf;src.connect(g2);g2.connect(ac.destination);
+    g2.gain.setValueAtTime(.2,ac.currentTime);
+    g2.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.08);
+    src.start(ac.currentTime);
+  }catch(e){}
+}
+
+function playBubblePop(){
+  try{
+    const ac=getAC();
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);o.type='sine';
+    o.frequency.setValueAtTime(600,ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1800,ac.currentTime+.05);
+    o.frequency.exponentialRampToValueAtTime(200,ac.currentTime+.18);
+    g.gain.setValueAtTime(.25,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2);
+    o.start(ac.currentTime);o.stop(ac.currentTime+.2);
+  }catch(e){}
+}
+
+function playHourFanfare(){
+  try{
+    const ac=getAC();
+    const melody=[523,784,1047,1319,1047,784,1047,1568];
+    melody.forEach((freq,i)=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g);g.connect(ac.destination);
+      o.frequency.value=freq;o.type='triangle';
+      const t=ac.currentTime+i*.15;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(.28,t+.05);
+      g.gain.exponentialRampToValueAtTime(.001,t+.35);
+      o.start(t);o.stop(t+.35);
+    });
+    // Bass hit
+    const ob=ac.createOscillator(),gb=ac.createGain();
+    ob.connect(gb);gb.connect(ac.destination);ob.type='sine';
+    ob.frequency.setValueAtTime(65,ac.currentTime);
+    ob.frequency.exponentialRampToValueAtTime(40,ac.currentTime+.5);
+    gb.gain.setValueAtTime(.4,ac.currentTime);
+    gb.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.5);
+    ob.start(ac.currentTime);ob.stop(ac.currentTime+.5);
+  }catch(e){}
+}
+
 // ── ROUE CASINO ───────────────────────────────────────────────
+function spinEventReel(target,cb){
+  const reel=document.getElementById('ereel');
+  const items=Array.from({length:22},()=>EVENTS[Math.floor(Math.random()*EVENTS.length)]);
+  items.push(target);
+  const ITEM_H=46,DURATION=2800,totalPx=(items.length-1)*ITEM_H;
+  reel.innerHTML=items.map(e=>`<div class="eitem">${e.label}</div>`).join('');
+  reel.style.transition='none';reel.style.transform='translateY(0)';
+  let start=null,lastIdx=-1;
+  function animate(ts){
+    if(!start)start=ts;
+    const prog=Math.min((ts-start)/DURATION,1);
+    const eased=1-Math.pow(1-prog,3);
+    const px=eased*totalPx;
+    reel.style.transform=`translateY(-${px}px)`;
+    const idx=Math.floor(px/ITEM_H);
+    if(idx!==lastIdx&&idx<items.length){lastIdx=idx;if(prog<.9)playTick();}
+    if(prog<1)requestAnimationFrame(animate);
+    else{reel.style.transform=`translateY(-${totalPx}px)`;if(cb)cb();}
+  }
+  requestAnimationFrame(animate);
+}
+
 function pickTwo(){
   const a=Math.floor(Math.random()*PAYS.length);
   let b;do{b=Math.floor(Math.random()*PAYS.length);}while(b===a);
@@ -523,9 +722,11 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const SPD=3,MAXS=8,WE=0.82,BB=1.12;
 
 function clamp(b){
+  const minS=b.slowed?SPD*.3:SPD;
+  const maxS=b.boosted?MAXS*2.5:MAXS;
   const s=Math.hypot(b.vx,b.vy);
-  if(s<SPD&&s>0){const k=SPD/s;b.vx*=k;b.vy*=k;}
-  if(s>MAXS){const k=MAXS/s;b.vx*=k;b.vy*=k;}
+  if(s<minS&&s>0){const k=minS/s;b.vx*=k;b.vy*=k;}
+  if(s>maxS){const k=maxS/s;b.vx*=k;b.vy*=k;}
 }
 function seg(px,py,ax,ay,bx,by){
   const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;
@@ -538,6 +739,18 @@ function seg(px,py,ax,ay,bx,by){
 let balls=[],bumps=[],sparks=[],hole=null;
 let over=false,timers=[],duelIv=null,dsec=0;
 let curA=null,curB=null;
+
+// ── EVENTS SYSTEM ─────────────────────────────────────────────
+const EVENTS=[
+  {id:'giant',   label:'🔴 BILLE GÉANTE',   emoji:'🔴'},
+  {id:'ghost',   label:'👻 BILLE FANTÔME',  emoji:'👻'},
+  {id:'bighole', label:'🕳️ TROU GÉANT',    emoji:'🕳️'},
+  {id:'boost',   label:'⚡ BOOST',          emoji:'⚡'},
+  {id:'slow',    label:'🐌 RALENTISSEMENT', emoji:'🐌'},
+];
+let bubble=null;
+let evCdSec=60,evCdIv=null,evCdRunning=false,evCdFrozen=false;
+let hrDramaIv=null,hrDramaSec=30;
 
 function mkHole(){
   return{x:rnd(CW*.28,CW*.72),y:rnd(CH*.3,CH*.7),
@@ -583,6 +796,7 @@ function updBall(b){
   clamp(b);
 
   for(const bp of bumps){
+    if(b.ghost)continue;
     if(bp.k==='c'){
       const dx=b.x-bp.x,dy=b.y-bp.y,d=Math.hypot(dx,dy),md=b.r+bp.r;
       if(d<md&&d>.01){
@@ -652,6 +866,106 @@ function posEl(el,flagEl,b){
   flagEl.style.fontSize=Math.round(b.r*1.05)+'px';
 }
 
+// ── EVENT FUNCTIONS ───────────────────────────────────────────
+function updateEvCdUI(){
+  const el=document.getElementById('ecd');if(!el)return;
+  el.textContent=evCdSec+'s';
+  el.classList.remove('ecd-warn','ecd-crit');
+  if(evCdSec<=5&&evCdSec>0){el.classList.add('ecd-crit');if(evCdRunning)playTick();}
+  else if(evCdSec<=10)el.classList.add('ecd-warn');
+}
+
+function startEvCd(){if(evCdRunning)return;evCdRunning=true;updateEvCdUI();}
+function pauseEvCd(){evCdRunning=false;}
+
+function initEvCdInterval(){
+  if(evCdIv)return;
+  evCdIv=setInterval(()=>{
+    if(!evCdRunning||evCdFrozen)return;
+    evCdSec--;updateEvCdUI();
+    if(evCdSec<=0){evCdSec=0;evCdRunning=false;triggerEvent();}
+  },1000);
+}
+
+function applyEffect(b,ev){
+  if(b.effect&&b.effect.timeout)clearTimeout(b.effect.timeout);
+  b.ghost=false;b.boosted=false;b.slowed=false;
+  if(b.baseR){b.r=b.baseR;b.baseR=undefined;}
+  if(ev.id==='bighole'&&hole&&hole._bigTm){clearTimeout(hole._bigTm);hole._bigTm=null;}
+  b.effect={id:ev.id,timeout:null};
+  if(ev.id==='giant'){
+    b.baseR=b.r;b.r*=2;
+    b.effect.timeout=setTimeout(()=>{b.r=b.baseR;b.baseR=undefined;b.effect=null;},8000);
+  }else if(ev.id==='ghost'){
+    b.ghost=true;
+    b.effect.timeout=setTimeout(()=>{b.ghost=false;b.effect=null;},8000);
+  }else if(ev.id==='bighole'){
+    if(hole){
+      if(!hole.baseR)hole.baseR=hole.r;
+      hole.r=hole.baseR*2;
+      hole._bigTm=setTimeout(()=>{if(hole){hole.r=hole.baseR;hole.baseR=undefined;hole._bigTm=null;}b.effect=null;},8000);
+      b.effect.timeout=hole._bigTm;
+    }
+  }else if(ev.id==='boost'){
+    const spd=Math.hypot(b.vx,b.vy)||SPD;
+    b.vx=(b.vx/spd)*spd*2.5;b.vy=(b.vy/spd)*spd*2.5;b.boosted=true;
+    b.effect.timeout=setTimeout(()=>{b.boosted=false;b.effect=null;},6000);
+  }else if(ev.id==='slow'){
+    b.vx*=.3;b.vy*=.3;b.slowed=true;
+    b.effect.timeout=setTimeout(()=>{
+      b.slowed=false;b.effect=null;
+      const s=Math.hypot(b.vx,b.vy);if(s<SPD&&s>.01){b.vx*=SPD/s;b.vy*=SPD/s;}
+    },8000);
+  }
+}
+
+function checkBubble(){
+  if(!bubble||over)return;
+  for(const b of balls){
+    if(!b.alive)continue;
+    if(Math.hypot(b.x-bubble.x,b.y-bubble.y)<bubble.r+b.r){
+      const ev=bubble.event;
+      playBubblePop();addSp(bubble.x,bubble.y,'#FFD700',20);addSp(bubble.x,bubble.y,'#fff',10);
+      bubble=null;applyEffect(b,ev);
+      setPhase(`${ev.emoji} ${ev.label} — ${b.side==='A'?curA.f+' '+curA.n:curB.f+' '+curB.n} !`);
+      break;
+    }
+  }
+}
+
+const SUSPENSE_MSGS=[
+  '⚡ Un événement approche…',
+  '🎯 Quelque chose se prépare…',
+  '🌀 Les dés sont lancés…',
+  '🔥 Le destin va frapper…',
+  '💥 Tirage imminent !',
+];
+function triggerEvent(){
+  evCdRunning=false;evCdFrozen=true;
+  const el=document.getElementById('ecd');
+  if(el){el.textContent='🎰';el.classList.remove('ecd-warn');el.classList.add('ecd-crit');}
+  playEventDrum();
+  // Messages de suspense avant le tirage
+  const msgs=SUSPENSE_MSGS.slice();
+  let mi=0;
+  function nextMsg(){
+    if(mi<msgs.length){setPhase(msgs[mi++]);setTimeout(nextMsg,600);}
+    else{doSpin();}
+  }
+  nextMsg();
+  function doSpin(){
+    const target=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+    spinEventReel(target,()=>{
+      const margin=50;
+      bubble={x:rnd(margin,CW-margin),y:rnd(margin,CH-margin),
+        r:Math.max(18,Math.round(CW*.038)),t:0,alpha:0,event:target};
+      setPhase('💥 Attrape la bulle pour subir l\'événement !');
+      evCdSec=60;evCdFrozen=false;updateEvCdUI();
+      if(!over)evCdRunning=true;
+    });
+  }
+}
+
 // ── DRAW ─────────────────────────────────────────────────────
 function drawBG(){
   const g=ctx.createRadialGradient(CW/2,CH/2,0,CW/2,CH/2,CW*.8);
@@ -680,6 +994,27 @@ function drawHole(){
     ctx.lineTo(x+Math.cos(a)*r*.85,y+Math.sin(a)*r*.85);
     ctx.stroke();
   }
+}
+
+function drawBubble(){
+  if(!bubble)return;
+  bubble.t=(bubble.t||0)+1;
+  bubble.alpha=Math.min(1,(bubble.alpha||0)+.04);
+  const{x,y,r,t,event,alpha}=bubble;
+  const pulse=r+Math.sin(t*.08)*3;
+  ctx.save();ctx.globalAlpha=alpha;
+  const glow=ctx.createRadialGradient(x,y,0,x,y,pulse*3);
+  glow.addColorStop(0,'rgba(255,255,100,.25)');glow.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,pulse*3,0,Math.PI*2);ctx.fill();
+  const bg=ctx.createRadialGradient(x-r*.3,y-r*.3,r*.05,x,y,pulse);
+  bg.addColorStop(0,'rgba(255,255,200,.6)');bg.addColorStop(.6,'rgba(200,200,255,.3)');bg.addColorStop(1,'rgba(100,100,200,.06)');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.arc(x,y,pulse,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=`rgba(255,255,150,${.6+Math.sin(t*.12)*.3})`;
+  ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(x,y,pulse,0,Math.PI*2);ctx.stroke();
+  ctx.font=`${Math.round(r*1.15)}px serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#fff';ctx.fillText(event.emoji,x,y);
+  ctx.restore();
 }
 
 function drawBump(b){
@@ -727,9 +1062,11 @@ function drawSparks(){
 function frame(){
   drawBG();
   drawHole();
+  drawBubble();
   bumps.forEach(drawBump);
   collide();
   balls.forEach(updBall);
+  checkBubble();
   drawTrails();
   drawSparks();
   posEl(elA,fA,balls[0]);
@@ -745,6 +1082,7 @@ function setPhase(t){
 }
 
 function onWin(winnerSide){
+  pauseEvCd();bubble=null;
   clearInterval(duelIv);
   const winner=winnerSide==='A'?curA:curB;
   addPt(winner.n);
@@ -761,8 +1099,10 @@ function onWin(winnerSide){
 }
 
 function nextRound(){
+  balls.forEach(b=>{if(b.effect&&b.effect.timeout)clearTimeout(b.effect.timeout);});
+  if(hole&&hole._bigTm){clearTimeout(hole._bigTm);hole._bigTm=null;}
   timers.forEach(t=>{clearTimeout(t);clearInterval(t);});timers=[];
-  sparks=[];over=false;balls=[];bumps=[];hole=null;
+  sparks=[];over=false;balls=[];bumps=[];hole=null;bubble=null;
   document.getElementById('wover').classList.remove('on');
   document.getElementById('cfw').innerHTML='';
   document.getElementById('dtimer').textContent='—';
@@ -781,6 +1121,7 @@ function nextRound(){
       dsec=0;clearInterval(duelIv);
       duelIv=setInterval(()=>{dsec++;
         document.getElementById('dtimer').textContent=dsec+'s';},1000);
+      evCdFrozen=false;updateEvCdUI();startEvCd();
       setPhase('🎱 Les billes sont lancées !');
       [
         [3000,'Les billes rebondissent… 🎱'],
@@ -812,6 +1153,7 @@ function launchConfetti(){
 // ── BOOT ─────────────────────────────────────────────────────
 initCv();
 frame();
+initEvCdInterval();
 setTimeout(nextRound,300);
 </script>
 
