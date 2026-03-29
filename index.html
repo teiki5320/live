@@ -81,7 +81,9 @@ letter-spacing:.16em;color:rgba(245,196,0,.85);text-align:center;
 border-top:1px solid rgba(255,255,255,.08);transition:opacity .2s;}
 
 /* RANKING */
-.rcard{width:100%;max-width:560px;background:#18181f;
+.ranks{width:100%;max-width:560px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:400px){.ranks{grid-template-columns:1fr;}}
+.rcard{width:100%;background:#18181f;
 border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
 .rhdr{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.08);
 display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px;}
@@ -165,6 +167,7 @@ animation:flt 1s ease infinite alternate;}
   <div class="phase" id="phase">En attente du prochain duel…</div>
 </section>
 
+<div class="ranks">
 <section class="rcard">
   <div class="rhdr">
     <div class="rtitle">TOP 5 — 1H</div>
@@ -180,6 +183,7 @@ animation:flt 1s ease infinite alternate;}
   </div>
   <div id="rlistD"><div class="rempty">Aucune victoire pour le moment</div></div>
 </section>
+</div>
 
 <div class="wover" id="wover">
   <div class="wcrown">👑</div>
@@ -721,7 +725,7 @@ function onWin(winnerSide){
   launchConfetti();
   playVictory();
   document.getElementById('wover').classList.add('on');
-  let c=8;document.getElementById('cd').textContent=c;
+  let c=4;document.getElementById('cd').textContent=c;
   const iv=setInterval(()=>{c--;document.getElementById('cd').textContent=c;
     if(c<=0){clearInterval(iv);nextRound();}},1000);
   timers.push(iv);
