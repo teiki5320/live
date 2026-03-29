@@ -167,10 +167,18 @@ animation:flt 1s ease infinite alternate;}
 
 <section class="rcard">
   <div class="rhdr">
-    <div class="rtitle">TOP 5 — 24H</div>
-    <div class="rmeta">Reset : 00:00 | Vainqueur hier : —</div>
+    <div class="rtitle">TOP 5 — 1H</div>
+    <div class="rmeta" id="rmetaH">Reset dans … min | Vainqueur préc. : —</div>
   </div>
-  <div id="rlist"><div class="rempty">Aucune victoire pour le moment</div></div>
+  <div id="rlistH"><div class="rempty">Aucune victoire pour le moment</div></div>
+</section>
+
+<section class="rcard">
+  <div class="rhdr">
+    <div class="rtitle">TOP 5 — 24H</div>
+    <div class="rmeta" id="rmetaD">Reset à 00:00 | Vainqueur hier : —</div>
+  </div>
+  <div id="rlistD"><div class="rempty">Aucune victoire pour le moment</div></div>
 </section>
 
 <div class="wover" id="wover">
@@ -204,19 +212,23 @@ const PAYS=[
 ];
 
 // ── SCORES ───────────────────────────────────────────────────
-const SC={};
-PAYS.forEach(p=>SC[p.n]=0);
+const SC_H={},SC_D={};
+PAYS.forEach(p=>{SC_H[p.n]=0;SC_D[p.n]=0;});
 
-function addPt(n){SC[n]=(SC[n]||0)+1;renderRank();}
+let lastHWinner=null,lastDWinner=null;
 
-function renderRank(){
-  // Always show 5 rows: winners first (sorted by score desc), then fill with alphabetical 0-score countries
+function addPt(n){
+  SC_H[n]=(SC_H[n]||0)+1;
+  SC_D[n]=(SC_D[n]||0)+1;
+  renderRankH();renderRankD();
+}
+
+function renderRank(SC,listId){
   const winners=Object.entries(SC).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   const winnerNames=new Set(winners.map(([n])=>n));
-  const fillers=PAYS.map(p=>p.n).filter(n=>!winnerNames.has(n)); // already alphabetical
+  const fillers=PAYS.map(p=>p.n).filter(n=>!winnerNames.has(n));
   const rows=[...winners,...fillers.map(n=>[n,0])].slice(0,5);
-
-  const el=document.getElementById('rlist');
+  const el=document.getElementById(listId);
   el.innerHTML=rows.map(([n,v],i)=>{
     const p=PAYS.find(x=>x.n===n)||{f:''};
     const isWinner=v>0;
@@ -226,7 +238,9 @@ function renderRank(){
       <span class="rscore" style="color:${isWinner?'#e8e8ee':'rgba(232,232,238,.25)'}">${v>0?v:'—'}</span></div>`;
   }).join('');
 }
-renderRank();
+function renderRankH(){renderRank(SC_H,'rlistH');}
+function renderRankD(){renderRank(SC_D,'rlistD');}
+renderRankH();renderRankD();
 
 // ── HORLOGE ──────────────────────────────────────────────────
 function tick(){
@@ -235,6 +249,45 @@ function tick(){
   document.getElementById('clk').textContent=t;
 }
 setInterval(tick,1000);tick();
+
+// ── META CLASSEMENTS ─────────────────────────────────────────
+function updateMetaH(){
+  const now=new Date();
+  const nextH=new Date(now);
+  nextH.setHours(now.getHours()+1,0,0,0);
+  const minLeft=Math.ceil((nextH-now)/60000);
+  const w=lastHWinner?`${lastHWinner.f} ${lastHWinner.n} (${lastHWinner.score} pt${lastHWinner.score>1?'s':''})`:'—';
+  document.getElementById('rmetaH').textContent=`Reset dans ${minLeft} min | Vainqueur préc. : ${w}`;
+}
+function updateMetaD(){
+  const w=lastDWinner?`${lastDWinner.f} ${lastDWinner.n} (${lastDWinner.score} pt${lastDWinner.score>1?'s':''})`:'—';
+  document.getElementById('rmetaD').textContent=`Reset à 00:00 | Vainqueur hier : ${w}`;
+}
+
+// ── RESETS ────────────────────────────────────────────────────
+function resetHourly(){
+  const top=Object.entries(SC_H).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])[0];
+  lastHWinner=top?{n:top[0],score:top[1],f:PAYS.find(p=>p.n===top[0])?.f||''}:null;
+  PAYS.forEach(p=>SC_H[p.n]=0);
+  renderRankH();updateMetaH();
+}
+function resetDaily(){
+  const top=Object.entries(SC_D).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])[0];
+  lastDWinner=top?{n:top[0],score:top[1],f:PAYS.find(p=>p.n===top[0])?.f||''}:null;
+  PAYS.forEach(p=>SC_D[p.n]=0);
+  renderRankD();updateMetaD();
+}
+
+// ── PLANIFICATION DES RESETS ──────────────────────────────────
+(function scheduleResets(){
+  const now=new Date();
+  const nextH=new Date(now);nextH.setHours(now.getHours()+1,0,0,0);
+  setTimeout(()=>{resetHourly();setInterval(resetHourly,3600000);},nextH-now);
+  const nextMidnight=new Date(now);nextMidnight.setHours(24,0,0,0);
+  setTimeout(()=>{resetDaily();setInterval(resetDaily,86400000);},nextMidnight-now);
+})();
+setInterval(updateMetaH,60000);
+updateMetaH();updateMetaD();
 
 // ── SON (Web Audio API) ───────────────────────────────────────
 let AC = null;
