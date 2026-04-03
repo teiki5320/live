@@ -1,7 +1,10 @@
 const { app, BrowserWindow } = require('electron');
+const path = require('path');
 
-// Autoriser l'autoplay audio sans geste utilisateur (résout AudioContext suspendu)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -11,15 +14,21 @@ function createWindow() {
     alwaysOnTop: true,
     title: 'Afrotok Live',
     backgroundColor: '#0a0a14',
+    show: false, // on attend ready-to-show avant d'afficher
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      backgroundThrottling: false, // empêche le throttling RAF/timers
     },
   });
 
-  win.loadFile('index.html');
+  win.loadFile(path.join(__dirname, 'index.html'));
 
-  // Cmd+Option+I → DevTools (debug)
+  win.once('ready-to-show', () => {
+    win.show();
+  });
+
+  // Cmd+Option+I → DevTools
   win.webContents.on('before-input-event', (event, input) => {
     if ((input.meta || input.control) && input.alt && input.key === 'i') {
       win.webContents.openDevTools({ mode: 'detach' });
