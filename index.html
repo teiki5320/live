@@ -481,6 +481,8 @@ function unlockAudio(){
 }
 document.addEventListener('touchstart',unlockAudio);
 document.addEventListener('click',unlockAudio);
+// Tentative auto-init AudioContext pour contextes embarqués (OBS, Electron)
+try{AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}
 
 function playTick(){
   try{
@@ -728,7 +730,8 @@ const fB=document.getElementById('fB');
 
 let CW=0,CH=0;
 function initCv(){
-  CW=Math.min(800,(document.documentElement.clientWidth||window.innerWidth)-20);
+  const vw=document.documentElement.clientWidth||window.innerWidth||800;
+  CW=Math.min(800,Math.max(320,vw-20));
   CH=Math.round(CW*0.58);
   cv.width=CW;cv.height=CH;
   cv.style.width=CW+'px';cv.style.height=CH+'px';
@@ -1169,10 +1172,24 @@ function launchConfetti(){
 }
 
 // ── BOOT ─────────────────────────────────────────────────────
-initCv();
-frame();
-initEvCdInterval();
-setTimeout(nextRound,300);
+let _booted=false;
+function boot(){
+  if(_booted)return;_booted=true;
+  initCv();
+  // Re-vérifie les dimensions après le 1er frame (layout parfois tardif en contexte embarqué)
+  requestAnimationFrame(()=>{if(CW<=0)initCv();});
+  frame();
+  initEvCdInterval();
+  setTimeout(nextRound,300);
+}
+// Démarre dès que le layout est disponible
+if(document.readyState==='complete'){
+  boot();
+}else{
+  window.addEventListener('load',boot,{once:true});
+  // Fallback : DOMContentLoaded + 100ms (contextes embarqués qui ne déclenchent pas 'load')
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,100),{once:true});
+}
 </script>
 
 </body>
