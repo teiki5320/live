@@ -1125,28 +1125,26 @@ function nextRound(){
   const [cA,cB]=pickTwo();
   curA=cA;curB=cB;
 
-  let dA=false,dB=false;
-  function check(){
-    if(!dA||!dB)return;
-    setTimeout(()=>{
-      fA.textContent=curA.f;fB.textContent=curB.f;
-      hole=mkHole();bumps=mkBumps();
-      balls=[mkBall('A'),mkBall('B')];
-      dsec=0;clearInterval(duelIv);
-      duelIv=setInterval(()=>{dsec++;
-        document.getElementById('dtimer').textContent=dsec+'s';},1000);
-      evCdFrozen=false;updateEvCdUI();startEvCd();
-      setPhase('🎱 Les billes sont lancées !');
-      [
-        [3000,'Les billes rebondissent… 🎱'],
-        [9000,'Attention aux obstacles ! ⚠️'],
-        [17000,'Le premier au trou a gagné… fonce ! 🕳️'],
-        [27000,'Qui va tomber en premier ? 😱'],
-      ].forEach(([t,m])=>{timers.push(setTimeout(()=>{if(!over)setPhase(m);},t));});
-    },500);
-  }
-  spinReel('reelA',cA,()=>{dA=true;check();});
-  spinReel('reelB',cB,()=>{dB=true;check();});
+  // Roues purement visuelles — les billes démarrent après un délai fixe
+  // indépendant de tout callback RAF/setInterval
+  spinReel('reelA',cA,null);
+  spinReel('reelB',cB,null);
+  timers.push(setTimeout(()=>{
+    fA.textContent=curA.f;fB.textContent=curB.f;
+    hole=mkHole();bumps=mkBumps();
+    balls=[mkBall('A'),mkBall('B')];
+    dsec=0;clearInterval(duelIv);
+    duelIv=setInterval(()=>{dsec++;
+      document.getElementById('dtimer').textContent=dsec+'s';},1000);
+    evCdFrozen=false;updateEvCdUI();startEvCd();
+    setPhase('🎱 Les billes sont lancées !');
+    [
+      [3000,'Les billes rebondissent… 🎱'],
+      [9000,'Attention aux obstacles ! ⚠️'],
+      [17000,'Le premier au trou a gagné… fonce ! 🕳️'],
+      [27000,'Qui va tomber en premier ? 😱'],
+    ].forEach(([t,m])=>{timers.push(setTimeout(()=>{if(!over)setPhase(m);},t));});
+  },3800)); // 3.8s ≈ durée du tirage (3.2s) + marge
 }
 
 function launchConfetti(){
