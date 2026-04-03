@@ -1071,10 +1071,23 @@ function frame(){
   drawHole();
   drawBubble();
   bumps.forEach(drawBump);
-  collide();balls.forEach(updBall);checkBubble();
+  try{
+    collide();balls.forEach(updBall);checkBubble();
+  }catch(e){
+    ctx.save();ctx.fillStyle='red';ctx.font='bold 12px monospace';
+    ctx.fillText('ERR: '+e.message,8,20);ctx.restore();
+    console.error('updBall crash',e);
+  }
   drawTrails();
   drawSparks();
-  drawBalls();
+  try{drawBalls();}catch(e){
+    ctx.save();ctx.fillStyle='orange';ctx.font='bold 12px monospace';
+    ctx.fillText('DRAW ERR: '+e.message,8,40);ctx.restore();
+    console.error('drawBalls crash',e);
+  }
+  // Debug temporaire
+  ctx.save();ctx.fillStyle='rgba(255,255,0,.8)';ctx.font='10px monospace';
+  ctx.fillText('b:'+balls.length+' cA:'+(curA?curA.n:'null'),4,CH-4);ctx.restore();
   posEl(elA,fA,balls[0]);
   posEl(elB,fB,balls[1]);
   requestAnimationFrame(frame);
