@@ -1185,11 +1185,15 @@ function boot(){
 // Démarre dès que le layout est disponible
 if(document.readyState==='complete'){
   boot();
+}else if(document.readyState==='interactive'){
+  // DOM parsé mais resources encore en cours — OBS/TikTok sont souvent ici
+  setTimeout(boot,50);
 }else{
-  window.addEventListener('load',boot,{once:true});
-  // Fallback : DOMContentLoaded + 100ms (contextes embarqués qui ne déclenchent pas 'load')
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,100),{once:true});
+  // Encore en chargement
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,50),{once:true});
 }
+// Filet de sécurité absolu : si aucun des cas ci-dessus ne déclenche boot()
+setTimeout(()=>{if(!_booted)boot();},800);
 </script>
 
 </body>
