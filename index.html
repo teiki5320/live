@@ -4,6 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>AFROTOK — DUEL LIVE</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -757,7 +759,7 @@ function seg(px,py,ax,ay,bx,by){
 }
 
 // Game state
-let balls=[],bumps=[],sparks=[],hole=null;
+let balls=[],bumps=[],sparks=[],hole=null,lastFrameT=0;
 let over=false,timers=[],duelIv=null,dsec=0;
 let curA=null,curB=null;
 
@@ -1081,6 +1083,7 @@ function drawSparks(){
 
 // ── RENDER LOOP ───────────────────────────────────────────────
 function frame(){
+  lastFrameT=performance.now();
   drawBG();
   drawHole();
   drawBubble();
@@ -1094,6 +1097,14 @@ function frame(){
   posEl(elB,fB,balls[1]);
   requestAnimationFrame(frame);
 }
+// Fallback render loop : si RAF est throttlé (TikTok, OBS background),
+// setInterval prend le relais toutes les 100ms
+setInterval(()=>{
+  if(performance.now()-lastFrameT>200) frame();
+},100);
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden) requestAnimationFrame(frame);
+});
 
 // ── GAME FLOW ─────────────────────────────────────────────────
 function setPhase(t){
