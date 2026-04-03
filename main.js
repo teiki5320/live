@@ -18,6 +18,13 @@ function createWindow() {
   });
 
   win.loadFile('index.html');
+
+  // Cmd+Option+I → DevTools (debug)
+  win.webContents.on('before-input-event', (event, input) => {
+    if ((input.meta || input.control) && input.alt && input.key === 'i') {
+      win.webContents.openDevTools({ mode: 'detach' });
+    }
+  });
 }
 
 app.whenReady().then(() => {
