@@ -1071,10 +1071,10 @@ function frame(){
   drawHole();
   drawBubble();
   bumps.forEach(drawBump);
-  collide();balls.forEach(updBall);checkBubble();
   drawTrails();
   drawSparks();
-  drawBalls();
+  drawBalls();          // dessin avant physique — résiste aux crashes updBall
+  try{collide();balls.forEach(updBall);checkBubble();}catch(e){}
   posEl(elA,fA,balls[0]);
   posEl(elB,fB,balls[1]);
   requestAnimationFrame(frame);
