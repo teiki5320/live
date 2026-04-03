@@ -1103,12 +1103,16 @@ function frame(){
   drawHole();
   drawBubble();
   bumps.forEach(drawBump);
-  collide();
-  balls.forEach(updBall);
-  checkBubble();
+  try{collide();balls.forEach(updBall);checkBubble();}catch(e){
+    ctx.fillStyle='red';ctx.font='11px monospace';ctx.fillText('ERR:'+e.message,8,20);
+    console.error('frame physics error',e);
+  }
   drawTrails();
   drawSparks();
   drawBalls();
+  // Debug: show ball count
+  ctx.fillStyle='rgba(255,255,0,.7)';ctx.font='10px monospace';
+  ctx.fillText('balls:'+balls.length+' over:'+over+' CW:'+CW,4,CH-4);
   posEl(elA,fA,balls[0]);
   posEl(elB,fB,balls[1]);
   requestAnimationFrame(frame);
