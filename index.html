@@ -638,19 +638,16 @@ function spinEventReel(target,cb){
   const ITEM_H=46,DURATION=2800,totalPx=(items.length-1)*ITEM_H;
   reel.innerHTML=items.map(e=>`<div class="eitem">${e.label}</div>`).join('');
   reel.style.transition='none';reel.style.transform='translateY(0)';
-  let start=null,lastIdx=-1;
-  function animate(ts){
-    if(!start)start=ts;
-    const prog=Math.min((ts-start)/DURATION,1);
-    const eased=1-Math.pow(1-prog,3);
-    const px=eased*totalPx;
+  const start=performance.now();let lastIdx=-1,done=false;
+  const iv=setInterval(()=>{
+    const prog=Math.min((performance.now()-start)/DURATION,1);
+    const px=(1-Math.pow(1-prog,3))*totalPx;
     reel.style.transform=`translateY(-${px}px)`;
     const idx=Math.floor(px/ITEM_H);
     if(idx!==lastIdx&&idx<items.length){lastIdx=idx;if(prog<.9)playTick();}
-    if(prog<1)requestAnimationFrame(animate);
-    else{reel.style.transform=`translateY(-${totalPx}px)`;if(cb)cb();}
-  }
-  requestAnimationFrame(animate);
+    if(prog>=1&&!done){done=true;clearInterval(iv);
+      reel.style.transform=`translateY(-${totalPx}px)`;if(cb)cb();}
+  },16);
 }
 
 function pickTwo(){
@@ -661,54 +658,25 @@ function pickTwo(){
 
 function spinReel(id, target, cb){
   const reel = document.getElementById(id);
-
-  // Build list: 28 random items + target at end
   const items = Array.from({length:28}, ()=>PAYS[Math.floor(Math.random()*PAYS.length)]);
   items.push(target);
-  const ITEM_H = 46;
-
-  reel.innerHTML = items.map(c=>
-    `<div class="sitem">${c.f} ${c.n}</div>`
-  ).join('');
-  reel.style.transition = 'none';
-  reel.style.transform = 'translateY(0)';
-
-  const totalItems = items.length;
-  const totalPx = (totalItems - 1) * ITEM_H;
-
-  // Easing: cubic ease-out gives the "slowing down" casino feel
-  // We animate using requestAnimationFrame with a time-based easing
-  const DURATION = 3200; // ms total spin
-  let start = null;
-  let lastTickIdx = -1;
-
-  function animate(ts){
-    if(!start) start = ts;
-    const elapsed = ts - start;
-    const progress = Math.min(elapsed / DURATION, 1);
-
-    // Ease-out cubic: fast start, slow finish
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const currentPx = eased * totalPx;
-
-    reel.style.transform = `translateY(-${currentPx}px)`;
-
-    // Tick sound on each item boundary
-    const currentIdx = Math.floor(currentPx / ITEM_H);
-    if(currentIdx !== lastTickIdx && currentIdx < totalItems){
-      lastTickIdx = currentIdx;
-      // Tick faster at start, stops near end
-      if(progress < 0.92) playTick();
-    }
-
-    if(progress < 1){
-      requestAnimationFrame(animate);
-    } else {
-      reel.style.transform = `translateY(-${totalPx}px)`;
-      if(cb) cb();
-    }
-  }
-  requestAnimationFrame(animate);
+  const ITEM_H=46, DURATION=3200;
+  const totalPx=(items.length-1)*ITEM_H;
+  reel.innerHTML=items.map(c=>`<div class="sitem">${c.f} ${c.n}</div>`).join('');
+  reel.style.transition='none';reel.style.transform='translateY(0)';
+  const start=performance.now();
+  let lastTickIdx=-1, done=false;
+  // setInterval plutôt que RAF — fiable même si RAF est throttlé (Electron, OBS)
+  const iv=setInterval(()=>{
+    const progress=Math.min((performance.now()-start)/DURATION,1);
+    const eased=1-Math.pow(1-progress,3);
+    const px=eased*totalPx;
+    reel.style.transform=`translateY(-${px}px)`;
+    const idx=Math.floor(px/ITEM_H);
+    if(idx!==lastTickIdx&&idx<items.length){lastTickIdx=idx;if(progress<.92)playTick();}
+    if(progress>=1&&!done){done=true;clearInterval(iv);
+      reel.style.transform=`translateY(-${totalPx}px)`;if(cb)cb();}
+  },16);
 }
 
 // ── CANVAS + PHYSIQUE ────────────────────────────────────────
@@ -1103,16 +1071,10 @@ function frame(){
   drawHole();
   drawBubble();
   bumps.forEach(drawBump);
-  try{collide();balls.forEach(updBall);checkBubble();}catch(e){
-    ctx.fillStyle='red';ctx.font='11px monospace';ctx.fillText('ERR:'+e.message,8,20);
-    console.error('frame physics error',e);
-  }
+  collide();balls.forEach(updBall);checkBubble();
   drawTrails();
   drawSparks();
   drawBalls();
-  // Debug: show ball count
-  ctx.fillStyle='rgba(255,255,0,.7)';ctx.font='10px monospace';
-  ctx.fillText('balls:'+balls.length+' over:'+over+' CW:'+CW,4,CH-4);
   posEl(elA,fA,balls[0]);
   posEl(elB,fB,balls[1]);
   requestAnimationFrame(frame);
