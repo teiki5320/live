@@ -1035,34 +1035,31 @@ function drawSparks(){
 
 // ── BALLS (canvas draw) ───────────────────────────────────────
 function drawBalls(){
-  if(!curA||!curB)return;
+  ctx.globalAlpha=1;
   for(const b of balls){
-    if(!b.alive)continue;
+    if(!b||!b.alive)continue;
     const isA=b.side==='A';
-    const base=isA?'#5bc8f5':'#f05555';
-    const dark=isA?'#071a3e':'#3e0707';
-    const glow=isA?'rgba(91,200,245,.75)':'rgba(240,85,85,.75)';
-    ctx.save();
-    ctx.globalAlpha=b.ghost?0.35:1;
-    // Glow ring
-    ctx.beginPath();ctx.arc(b.x,b.y,b.r+4,0,Math.PI*2);
-    ctx.fillStyle=glow;ctx.fill();
-    // Main ball
+    const alpha=b.ghost?0.35:1;
+    // Glow
+    ctx.globalAlpha=alpha*.5;
+    ctx.beginPath();ctx.arc(b.x,b.y,b.r+6,0,Math.PI*2);
+    ctx.fillStyle=isA?'#5bc8f5':'#f05555';ctx.fill();
+    // Ball
+    ctx.globalAlpha=alpha;
     ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-    ctx.fillStyle=base;ctx.fill();
-    // Dark inner shadow (bottom)
-    ctx.beginPath();ctx.arc(b.x+b.r*.15,b.y+b.r*.2,b.r*.7,0,Math.PI*2);
-    ctx.fillStyle=dark;ctx.globalAlpha=(b.ghost?0.35:1)*.55;ctx.fill();
-    // White specular (top-left)
-    ctx.beginPath();ctx.arc(b.x-b.r*.25,b.y-b.r*.28,b.r*.38,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,0.75)';ctx.globalAlpha=b.ghost?0.2:0.75;ctx.fill();
+    ctx.fillStyle=isA?'#5bc8f5':'#f05555';ctx.fill();
+    // Specular
+    ctx.globalAlpha=alpha*.6;
+    ctx.beginPath();ctx.arc(b.x-b.r*.25,b.y-b.r*.3,b.r*.35,0,Math.PI*2);
+    ctx.fillStyle='#fff';ctx.fill();
     // Flag emoji
-    ctx.globalAlpha=b.ghost?0.35:1;
-    ctx.font=`${Math.round(b.r*.9)}px serif`;
+    ctx.globalAlpha=alpha;
+    ctx.font=Math.round(b.r*.9)+'px serif';
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(isA?curA.f:curB.f,b.x,b.y);
-    ctx.restore();
+    const flag=isA?(curA?curA.f:'🔵'):(curB?curB.f:'🔴');
+    ctx.fillText(flag,b.x,b.y);
   }
+  ctx.globalAlpha=1;
 }
 
 // ── RENDER LOOP ───────────────────────────────────────────────
