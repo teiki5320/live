@@ -10,16 +10,19 @@
 <title>AFROTOK — DUEL LIVE</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+html{width:1080px;height:1920px;overflow:hidden;}
 body{
   background:#0f0f14;color:#e8e8ee;
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  padding:10px 10px 30px;gap:10px;overflow-x:hidden;
+  display:flex;flex-direction:column;align-items:stretch;
+  padding:7px 8px;gap:7px;
+  width:540px;height:960px;
+  transform:scale(2);transform-origin:top left;
 }
 
 /* HEADER */
 .hdr{
-width:100%;max-width:800px;background:#18181f;
+width:100%;background:#18181f;
 border:1px solid rgba(255,255,255,.08);border-radius:14px;
 padding:12px 16px;display:flex;justify-content:space-between;align-items:center;
 }
@@ -35,7 +38,7 @@ text-transform:uppercase;}
 
 /* SLOTS */
 .slots{
-width:100%;max-width:800px;
+width:100%;
 display:grid;grid-template-columns:1fr 40px 1fr;gap:8px;align-items:center;
 }
 .scard{background:#18181f;border:1px solid rgba(255,255,255,.08);
@@ -56,7 +59,7 @@ width:100%;text-align:center;
 .vs{font-size:1rem;font-weight:900;color:rgba(232,232,238,.3);text-align:center;letter-spacing:.1em}
 
 /* DUEL CARD */
-.dcard{width:100%;max-width:800px;background:#18181f;
+.dcard{width:100%;background:#18181f;
 border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
 .dhdr{padding:9px 14px;display:flex;justify-content:space-between;align-items:center;
 border-bottom:1px solid rgba(255,255,255,.08);}
@@ -123,7 +126,7 @@ letter-spacing:.16em;color:rgba(245,196,0,.85);text-align:center;
 border-top:1px solid rgba(255,255,255,.08);transition:opacity .2s;}
 
 /* RANKING */
-.ranks{width:100%;max-width:800px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ranks{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 @media(max-width:400px){.ranks{grid-template-columns:1fr;}}
 .rcard{width:100%;background:#18181f;
 border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
@@ -162,7 +165,7 @@ background:linear-gradient(135deg,#FFD700,#FF8C00,#FFD700);
 animation:flt 1s ease infinite alternate;}
 @keyframes flt{from{opacity:.15}to{opacity:.6}}
 .wad{
-  width:90%;max-width:420px;margin-top:18px;
+  width:90%;max-width:480px;margin-top:18px;
   border:1px solid rgba(255,255,255,.12);border-radius:10px;
   overflow:hidden;background:rgba(255,255,255,.04);
 }
@@ -212,7 +215,7 @@ animation:flt 1s ease infinite alternate;}
   margin-top:20px;animation:hovfade 1.5s ease infinite alternate;}
 
 /* EVENT CARD */
-.ecard{width:100%;max-width:800px;background:#18181f;
+.ecard{width:100%;background:#18181f;
   border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
 .ehdr{padding:9px 14px;display:flex;justify-content:space-between;align-items:center;
   border-bottom:1px solid rgba(255,255,255,.08);}
@@ -234,7 +237,6 @@ animation:flt 1s ease infinite alternate;}
 </head>
 <body>
 
-<button id="closeBtn" onclick="window.close()" title="Fermer" style="position:fixed;top:8px;right:10px;z-index:9999;background:rgba(255,60,60,.85);border:none;border-radius:50%;width:22px;height:22px;color:#fff;font-size:13px;cursor:pointer;line-height:22px;text-align:center;padding:0;-webkit-app-region:no-drag;">✕</button>
 <header class="hdr" style="-webkit-app-region:drag">
   <div class="brand">
     <div class="dot"></div>
@@ -743,16 +745,16 @@ const ballElB=document.getElementById('ball-B');
 
 let CW=0,CH=0;
 function initCv(){
-  const vw=document.documentElement.clientWidth||window.innerWidth||800;
-  CW=Math.min(800,Math.max(320,vw-20));
-  if(CW<=0){CW=800;CH=464;}else{CH=Math.round(CW*0.58);}
+  const vw=document.documentElement.clientWidth||window.innerWidth||540;
+  CW=Math.min(524,Math.max(300,vw-16));
+  if(CW<=0){CW=524;CH=462;}else{CH=Math.round(CW*0.883);}
   arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';
 }
 window.addEventListener('resize',initCv);
 
 const R=()=>Math.max(16,Math.round(CW*0.032));
 const rnd=(a,b)=>a+Math.random()*(b-a);
-const SPD=3,MAXS=8,WE=0.82,BB=1.12;
+const SPD=2,MAXS=6,WE=0.82,BB=1.12;
 
 function clamp(b){
   const minS=b.slowed?SPD*.3:SPD;
@@ -790,21 +792,35 @@ function mkHole(){
     r:Math.max(14,Math.round(CW*.026)),t:0};
 }
 function mkBumps(){
-  const list=[];const n=4+Math.floor(Math.random()*3);
-  for(let i=0;i<n;i++){
+  const list=[];
+  const nHex=2+Math.floor(Math.random()*2); // 2-3 hexagones
+  const nBar=2+Math.floor(Math.random()*2); // 2-3 barres
+  const types=[...Array(nHex).fill('c'),...Array(nBar).fill('w')]
+    .sort(()=>Math.random()-.5); // mélanger
+
+  for(const type of types){
     let x,y,tr=0;
-    do{x=rnd(CW*.1,CW*.9);y=rnd(CH*.12,CH*.88);tr++;}
-    while(tr<40&&(Math.hypot(x-hole.x,y-hole.y)<hole.r*4||
-      list.some(b=>b.k==='c'&&Math.hypot(x-b.x,y-b.y)<48)));
-    if(Math.random()<.35){
-      const hw=Math.floor(rnd(0,360)),l=rnd(42,75);
+    // Anti-chevauchement : trou + autres bumps
+    do{
+      x=rnd(CW*.1,CW*.9);y=rnd(CH*.12,CH*.88);tr++;
+    }while(tr<60&&(
+      Math.hypot(x-hole.x,y-hole.y)<hole.r*4.5||
+      list.some(b=>{
+        if(b.k==='c') return Math.hypot(x-b.x,y-b.y)<56;
+        // distance au milieu de la barre
+        const mx=(b.x1+b.x2)/2,my=(b.y1+b.y2)/2;
+        return Math.hypot(x-mx,y-my)<60;
+      })
+    ));
+    if(type==='w'){
+      const hw=Math.floor(rnd(0,360)),l=rnd(44,72);
       const a=rnd(0,Math.PI);
       list.push({k:'w',x1:x-Math.cos(a)*l/2,y1:y-Math.sin(a)*l/2,
         x2:x+Math.cos(a)*l/2,y2:y+Math.sin(a)*l/2,
         col:`hsl(${hw},70%,58%)`,hue:hw,fl:0});
     }else{
       const hc=Math.floor(rnd(0,360));
-      list.push({k:'c',x,y,r:rnd(18,28),col:`hsl(${hc},80%,60%)`,hue:hc,fl:0});
+      list.push({k:'c',x,y,r:rnd(18,26),col:`hsl(${hc},80%,60%)`,hue:hc,fl:0});
     }
   }
   return list;
@@ -1195,7 +1211,7 @@ let _booted=false;
 function boot(){
   if(_booted)return;_booted=true;
   initCv();
-  if(CW<=0){CW=800;CH=464;arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';}
+  if(CW<=0){CW=524;CH=462;arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';}
   console.log('AFROTOK BOOT',CW,CH);
   // setInterval(frame,16) est déjà lancé en global — pas besoin d'appeler frame() ici
   initEvCdInterval();
