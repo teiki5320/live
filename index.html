@@ -10,16 +10,17 @@
 <title>AFROTOK — DUEL LIVE</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+html,body{width:540px;height:960px;overflow:hidden;}
 body{
   background:#0f0f14;color:#e8e8ee;
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  padding:10px 10px 30px;gap:10px;overflow-x:hidden;
+  display:flex;flex-direction:column;align-items:stretch;
+  padding:7px 8px;gap:7px;
 }
 
 /* HEADER */
 .hdr{
-width:100%;max-width:800px;background:#18181f;
+width:100%;background:#18181f;
 border:1px solid rgba(255,255,255,.08);border-radius:14px;
 padding:12px 16px;display:flex;justify-content:space-between;align-items:center;
 }
@@ -35,7 +36,7 @@ text-transform:uppercase;}
 
 /* SLOTS */
 .slots{
-width:100%;max-width:800px;
+width:100%;
 display:grid;grid-template-columns:1fr 40px 1fr;gap:8px;align-items:center;
 }
 .scard{background:#18181f;border:1px solid rgba(255,255,255,.08);
@@ -56,7 +57,7 @@ width:100%;text-align:center;
 .vs{font-size:1rem;font-weight:900;color:rgba(232,232,238,.3);text-align:center;letter-spacing:.1em}
 
 /* DUEL CARD */
-.dcard{width:100%;max-width:800px;background:#18181f;
+.dcard{width:100%;background:#18181f;
 border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
 .dhdr{padding:9px 14px;display:flex;justify-content:space-between;align-items:center;
 border-bottom:1px solid rgba(255,255,255,.08);}
@@ -123,7 +124,7 @@ letter-spacing:.16em;color:rgba(245,196,0,.85);text-align:center;
 border-top:1px solid rgba(255,255,255,.08);transition:opacity .2s;}
 
 /* RANKING */
-.ranks{width:100%;max-width:800px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ranks{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 @media(max-width:400px){.ranks{grid-template-columns:1fr;}}
 .rcard{width:100%;background:#18181f;
 border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
@@ -162,7 +163,7 @@ background:linear-gradient(135deg,#FFD700,#FF8C00,#FFD700);
 animation:flt 1s ease infinite alternate;}
 @keyframes flt{from{opacity:.15}to{opacity:.6}}
 .wad{
-  width:90%;max-width:420px;margin-top:18px;
+  width:90%;max-width:480px;margin-top:18px;
   border:1px solid rgba(255,255,255,.12);border-radius:10px;
   overflow:hidden;background:rgba(255,255,255,.04);
 }
@@ -212,7 +213,7 @@ animation:flt 1s ease infinite alternate;}
   margin-top:20px;animation:hovfade 1.5s ease infinite alternate;}
 
 /* EVENT CARD */
-.ecard{width:100%;max-width:800px;background:#18181f;
+.ecard{width:100%;background:#18181f;
   border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;}
 .ehdr{padding:9px 14px;display:flex;justify-content:space-between;align-items:center;
   border-bottom:1px solid rgba(255,255,255,.08);}
@@ -742,9 +743,9 @@ const ballElB=document.getElementById('ball-B');
 
 let CW=0,CH=0;
 function initCv(){
-  const vw=document.documentElement.clientWidth||window.innerWidth||800;
-  CW=Math.min(800,Math.max(320,vw-20));
-  if(CW<=0){CW=800;CH=464;}else{CH=Math.round(CW*0.58);}
+  const vw=document.documentElement.clientWidth||window.innerWidth||540;
+  CW=Math.min(524,Math.max(300,vw-16));
+  if(CW<=0){CW=524;CH=462;}else{CH=Math.round(CW*0.883);}
   arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';
 }
 window.addEventListener('resize',initCv);
@@ -1208,7 +1209,7 @@ let _booted=false;
 function boot(){
   if(_booted)return;_booted=true;
   initCv();
-  if(CW<=0){CW=800;CH=464;arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';}
+  if(CW<=0){CW=524;CH=462;arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';}
   console.log('AFROTOK BOOT',CW,CH);
   // setInterval(frame,16) est déjà lancé en global — pas besoin d'appeler frame() ici
   initEvCdInterval();
