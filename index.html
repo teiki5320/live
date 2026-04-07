@@ -73,10 +73,10 @@ border-bottom:1px solid rgba(255,255,255,.08);}
   font-size:1.4em;pointer-events:none;visibility:hidden;will-change:transform;
   border:1.5px solid rgba(255,255,255,.45);
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
-/* Reflet spéculaire via ::before */
+/* Reflet réduit — ne cache plus le drapeau */
 .game-ball::before{content:'';position:absolute;
-  width:45%;height:40%;top:10%;left:14%;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.75) 0%,rgba(255,255,255,0) 100%);
+  width:28%;height:24%;top:7%;left:11%;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.48) 0%,rgba(255,255,255,0) 100%);
   pointer-events:none;}
 .ball-a{
   background:radial-gradient(circle at 60% 65%,rgba(0,60,120,.55) 0%,transparent 55%),
@@ -102,7 +102,7 @@ border-bottom:1px solid rgba(255,255,255,.08);}
   animation:hole-rot 4s linear infinite;}
 
 /* ── BUMPS ── */
-.bump-c{position:absolute;top:0;left:0;
+.bump-c{position:absolute;top:0;left:0;overflow:hidden;
   clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
   transition:filter .1s;}
 .bump-w{position:absolute;top:0;left:0;border-radius:7px;height:13px;
@@ -1005,18 +1005,32 @@ function domSetBumps(){
     const el=document.createElement('div');
     b._el=el;
     if(b.k==='c'){
-      // Hexagone liquid glass
+      // Hexagone liquid glass avec reflet interne
       const h=b.hue,d=b.r*2;
       el.className='bump-c';
       el.style.width=d+'px';el.style.height=d+'px';
+      // Corps vitré : fond semi-transparent + ombre de profondeur
       el.style.background=
-        `radial-gradient(circle at 32% 28%,rgba(255,255,255,.55) 0%,transparent 42%),`+
-        `radial-gradient(circle at 65% 68%,hsla(${h},85%,20%,.4) 0%,transparent 40%),`+
-        `linear-gradient(145deg,hsla(${h},65%,72%,.88),hsla(${h},72%,48%,.92),hsla(${h},80%,30%,.97))`;
+        `linear-gradient(145deg,`+
+        `hsla(${h},60%,75%,.7) 0%,`+
+        `hsla(${h},70%,50%,.82) 50%,`+
+        `hsla(${h},80%,28%,.95) 100%)`;
       el.style.filter=
-        `drop-shadow(0 0 12px hsla(${h},80%,60%,.7))`+
-        ` drop-shadow(0 4px 8px rgba(0,0,0,.55))`;
+        `drop-shadow(0 0 14px hsla(${h},80%,62%,.75))`+
+        ` drop-shadow(0 5px 10px rgba(0,0,0,.6))`;
       el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`;
+      // Reflet interne (clippé par le clip-path parent = reste dans l'hexagone)
+      const shine=document.createElement('div');
+      shine.style.cssText=
+        'position:absolute;top:8%;left:10%;width:44%;height:38%;border-radius:50%;pointer-events:none;'+
+        'background:radial-gradient(circle,rgba(255,255,255,.72) 0%,rgba(255,255,255,0) 100%)';
+      el.appendChild(shine);
+      // Facette basse (ombre interne)
+      const shade=document.createElement('div');
+      shade.style.cssText=
+        'position:absolute;bottom:6%;right:8%;width:38%;height:32%;border-radius:50%;pointer-events:none;'+
+        `background:radial-gradient(circle,hsla(${h},80%,18%,.55) 0%,transparent 100%)`;
+      el.appendChild(shade);
       b._baseFilter=el.style.filter;
     }else{
       // Barre liquid glass
