@@ -683,7 +683,7 @@ function spinReel(id, target, cb){
 // ── CANVAS + PHYSIQUE ────────────────────────────────────────
 const arena=document.getElementById('arena');
 const cv=document.getElementById('cv');
-const ctx=cv.getContext('2d');
+const ctx=cv.getContext('2d',{alpha:false});
 const elA=document.getElementById('mA');
 const elB=document.getElementById('mB');
 const fA=document.getElementById('fA');
@@ -944,6 +944,7 @@ function triggerEvent(){
 
 // ── DRAW ─────────────────────────────────────────────────────
 function drawBG(){
+  ctx.globalAlpha=1;
   ctx.fillStyle='#111120';
   ctx.fillRect(0,0,CW,CH);
   ctx.fillStyle='rgba(255,255,255,.018)';
