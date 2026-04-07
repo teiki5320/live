@@ -80,7 +80,9 @@ border-bottom:1px solid rgba(255,255,255,.08);}
 .game-hole::after{content:'';position:absolute;inset:0;border-radius:50%;
   background:conic-gradient(rgba(245,196,0,.18) 0deg,transparent 60deg,rgba(245,196,0,.18) 120deg,transparent 180deg,rgba(245,196,0,.18) 240deg,transparent 300deg,rgba(245,196,0,.18) 360deg);
   animation:hole-rot 4s linear infinite;}
-.bump-c{position:absolute;top:0;left:0;border-radius:50%;transition:filter .1s;}
+.bump-c{position:absolute;top:0;left:0;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  transition:filter .1s;}
 .bump-w{position:absolute;top:0;left:0;border-radius:6px;height:12px;transform-origin:left center;transition:filter .1s;}
 .bump-flash{filter:brightness(4) saturate(2.5);}
 .game-bubble{position:absolute;top:0;left:0;border-radius:50%;
@@ -973,13 +975,11 @@ function domSetBumps(){
     const el=document.createElement('div');
     b._el=el;
     if(b.k==='c'){
-      // Pin creux : bague colorée + centre sombre
+      // Hexagone plein
       el.className='bump-c';
       const d=b.r*2;
       el.style.width=d+'px';el.style.height=d+'px';
-      el.style.border=`3px solid ${b.col}`;
-      el.style.background='rgba(10,10,20,0.75)';
-      el.style.boxShadow=`0 0 10px ${b.col}88,inset 0 0 4px ${b.col}44`;
+      el.style.background=b.col;
       el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`;
     }else{
       // Barre lumineuse
