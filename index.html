@@ -766,6 +766,7 @@ function mkBall(side){
 
 function updBall(b){
   if(!b.alive)return;
+  if(b.frozen)return; // En attente du tirage — ne pas bouger
   b.x+=b.vx;b.y+=b.vy;
   b.trail.push({x:b.x,y:b.y});
   if(b.trail.length>16)b.trail.shift();
@@ -1084,11 +1085,8 @@ function frame(){
   // Debug overlay visible dans Streamlabs sans console
   ctx.save();ctx.globalAlpha=.85;ctx.fillStyle='#fff';ctx.font='11px monospace';
   ctx.textAlign='left';ctx.textBaseline='bottom';
-  ctx.fillText('balls:'+balls.length+' alive:'+balls.filter(b=>b&&b.alive).length+' CW:'+CW,4,CH-2);
-  if(window._ballErr){
-    ctx.fillStyle='#f55';ctx.font='10px monospace';
-    ctx.fillText('ERR:'+window._ballErr.slice(0,60),4,CH-14);
-  }
+  const _frozen=balls.filter(b=>b&&b.frozen).length;
+  ctx.fillText('balls:'+balls.length+' alive:'+balls.filter(b=>b&&b.alive).length+(_frozen?' frz:'+_frozen:'')+' CW:'+CW,4,CH-2);
   ctx.restore();
   try{collide();balls.forEach(updBall);checkBubble();}catch(e){}
   posEl(elA,fA,balls[0]);
@@ -1135,33 +1133,33 @@ function nextRound(){
   const [cA,cB]=pickTwo();
   curA=cA;curB=cB;
 
-  // Roues purement visuelles — les billes démarrent après un délai fixe
-  // indépendant de tout callback RAF/setInterval
+  // Créer les billes IMMÉDIATEMENT (frozen=true = immobiles pendant le tirage)
+  // Cela évite tout problème de timing/setTimeout dans les WebViews embarquées
+  hole=mkHole();bumps=mkBumps();
+  balls=[mkBall('A'),mkBall('B')];
+  balls.forEach(b=>{b.frozen=true;});
+  fA.textContent=curA.f;fB.textContent=curB.f;
+  console.log('BALLS READY (frozen)',balls.length);
+
+  // Roues visuelles
   spinReel('reelA',cA,null);
   spinReel('reelB',cB,null);
+
+  // Après le tirage : débloquer les billes
   timers.push(setTimeout(()=>{
-    try{
-      fA.textContent=curA.f;fB.textContent=curB.f;
-      hole=mkHole();bumps=mkBumps();
-      balls=[mkBall('A'),mkBall('B')];
-      console.log('BALLS CREATED',balls.length,balls.map(b=>({x:Math.round(b.x),y:Math.round(b.y),alive:b.alive})));
-      dsec=0;clearInterval(duelIv);
-      duelIv=setInterval(()=>{dsec++;
-        document.getElementById('dtimer').textContent=dsec+'s';},1000);
-      evCdFrozen=false;updateEvCdUI();startEvCd();
-      setPhase('🎱 Les billes sont lancées !');
-      [
-        [3000,'Les billes rebondissent… 🎱'],
-        [9000,'Attention aux obstacles ! ⚠️'],
-        [17000,'Le premier au trou a gagné… fonce ! 🕳️'],
-        [27000,'Qui va tomber en premier ? 😱'],
-      ].forEach(([t,m])=>{timers.push(setTimeout(()=>{if(!over)setPhase(m);},t));});
-    }catch(err){
-      // Affiche l'erreur sur le canvas — visible dans Streamlabs
-      console.error('NEXT_ROUND_ERR',err);
-      window._ballErr=String(err);
-    }
-  },3800)); // 3.8s ≈ durée du tirage (3.2s) + marge
+    balls.forEach(b=>{b.frozen=false;});
+    dsec=0;clearInterval(duelIv);
+    duelIv=setInterval(()=>{dsec++;
+      document.getElementById('dtimer').textContent=dsec+'s';},1000);
+    evCdFrozen=false;updateEvCdUI();startEvCd();
+    setPhase('🎱 Les billes sont lancées !');
+    [
+      [3000,'Les billes rebondissent… 🎱'],
+      [9000,'Attention aux obstacles ! ⚠️'],
+      [17000,'Le premier au trou a gagné… fonce ! 🕳️'],
+      [27000,'Qui va tomber en premier ? 😱'],
+    ].forEach(([t,m])=>{timers.push(setTimeout(()=>{if(!over)setPhase(m);},t));});
+  },3800));
 }
 
 function launchConfetti(){
