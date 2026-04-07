@@ -64,29 +64,58 @@ border-bottom:1px solid rgba(255,255,255,.08);}
 .dtimer{font-size:.95rem;font-weight:700;color:#f5c400;}
 
 /* ARENA */
-#arena{position:relative;background:#111120;overflow:hidden;
-  background-image:radial-gradient(circle,rgba(255,255,255,.022) 1px,transparent 1px);
-  background-size:34px 34px;}
+#arena{position:relative;overflow:hidden;
+  background:radial-gradient(ellipse at 30% 20%,#1a1035 0%,#0d0d1e 55%,#091525 100%);}
+
+/* ── LIQUID GLASS BALLS ─── */
 .game-ball{position:absolute;top:0;left:0;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-weight:900;color:#fff;pointer-events:none;visibility:hidden;
-  text-shadow:0 1px 3px rgba(0,0,0,.6);will-change:transform;}
-.ball-a{background:radial-gradient(circle at 35% 35%,#a0e8ff,#3aabdf);box-shadow:0 0 16px #5bc8f577,0 3px 8px rgba(0,0,0,.5);}
-.ball-b{background:radial-gradient(circle at 35% 35%,#ff9090,#d83535);box-shadow:0 0 16px #f0555577,0 3px 8px rgba(0,0,0,.5);}
-.game-hole{position:absolute;top:0;left:0;border-radius:50%;
-  background:#000;border:2.5px solid #f5c400;visibility:hidden;
-  box-shadow:0 0 18px rgba(245,196,0,.35),inset 0 0 10px rgba(0,0,0,.9);}
+  font-size:1.4em;pointer-events:none;visibility:hidden;will-change:transform;
+  border:1.5px solid rgba(255,255,255,.45);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+/* Reflet spéculaire via ::before */
+.game-ball::before{content:'';position:absolute;
+  width:45%;height:40%;top:10%;left:14%;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.75) 0%,rgba(255,255,255,0) 100%);
+  pointer-events:none;}
+.ball-a{
+  background:radial-gradient(circle at 60% 65%,rgba(0,60,120,.55) 0%,transparent 55%),
+            radial-gradient(circle at 50% 50%,rgba(91,200,245,.55),rgba(20,110,190,.8));
+  box-shadow:0 0 24px rgba(91,200,245,.55),0 8px 20px rgba(0,0,0,.6),
+             inset 0 -5px 12px rgba(0,30,80,.4),inset 0 3px 8px rgba(255,255,255,.25);}
+.ball-b{
+  background:radial-gradient(circle at 60% 65%,rgba(120,0,30,.55) 0%,transparent 55%),
+            radial-gradient(circle at 50% 50%,rgba(240,85,85,.55),rgba(180,20,20,.8));
+  box-shadow:0 0 24px rgba(240,85,85,.55),0 8px 20px rgba(0,0,0,.6),
+             inset 0 -5px 12px rgba(80,0,0,.4),inset 0 3px 8px rgba(255,255,255,.25);}
+
+/* ── TROU ── */
+.game-hole{position:absolute;top:0;left:0;border-radius:50%;visibility:hidden;
+  background:radial-gradient(circle,#000 40%,rgba(0,0,0,.7) 75%,rgba(20,10,40,.2) 100%);
+  border:2px solid rgba(245,196,0,.7);
+  box-shadow:0 0 22px rgba(245,196,0,.5),0 0 50px rgba(245,196,0,.2),
+             inset 0 0 22px rgba(0,0,0,.95),inset 0 0 8px rgba(245,196,0,.15);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}
 @keyframes hole-rot{to{transform:rotate(360deg)}}
 .game-hole::after{content:'';position:absolute;inset:0;border-radius:50%;
-  background:conic-gradient(rgba(245,196,0,.18) 0deg,transparent 60deg,rgba(245,196,0,.18) 120deg,transparent 180deg,rgba(245,196,0,.18) 240deg,transparent 300deg,rgba(245,196,0,.18) 360deg);
+  background:conic-gradient(rgba(245,196,0,.22) 0deg,transparent 60deg,rgba(245,196,0,.22) 120deg,transparent 180deg,rgba(245,196,0,.22) 240deg,transparent 300deg,rgba(245,196,0,.22) 360deg);
   animation:hole-rot 4s linear infinite;}
+
+/* ── BUMPS ── */
 .bump-c{position:absolute;top:0;left:0;
   clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
-  transition:filter .12s;}
-.bump-w{position:absolute;top:0;left:0;border-radius:6px;height:12px;transform-origin:left center;transition:filter .12s,box-shadow .12s;}
+  transition:filter .1s;}
+.bump-w{position:absolute;top:0;left:0;border-radius:7px;height:13px;
+  transform-origin:left center;transition:filter .1s,box-shadow .1s;
+  border-top:1px solid rgba(255,255,255,.4);}
+
+/* ── BUBBLE ── */
 .game-bubble{position:absolute;top:0;left:0;border-radius:50%;
   display:none;align-items:center;justify-content:center;
-  border:2.5px solid rgba(255,255,150,.85);background:rgba(200,200,255,.3);
+  border:2px solid rgba(255,255,180,.7);
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.35),rgba(200,200,255,.15));
+  box-shadow:0 0 18px rgba(255,255,100,.35),inset 0 2px 6px rgba(255,255,255,.25);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
   pointer-events:none;}
 
 .phase{padding:7px 14px;min-height:32px;font-size:.78rem;
@@ -976,35 +1005,36 @@ function domSetBumps(){
     const el=document.createElement('div');
     b._el=el;
     if(b.k==='c'){
-      // Hexagone avec relief 3D
+      // Hexagone liquid glass
       const h=b.hue,d=b.r*2;
       el.className='bump-c';
       el.style.width=d+'px';el.style.height=d+'px';
-      // Gradient simulant un éclairage haut-gauche
       el.style.background=
-        `linear-gradient(145deg,`+
-        `hsl(${h},75%,80%) 0%,`+
-        `hsl(${h},80%,60%) 45%,`+
-        `hsl(${h},85%,38%) 100%)`;
-      el.style.filter=`drop-shadow(0 0 10px hsl(${h},80%,50%)) drop-shadow(0 3px 5px rgba(0,0,0,.6))`;
+        `radial-gradient(circle at 32% 28%,rgba(255,255,255,.55) 0%,transparent 42%),`+
+        `radial-gradient(circle at 65% 68%,hsla(${h},85%,20%,.4) 0%,transparent 40%),`+
+        `linear-gradient(145deg,hsla(${h},65%,72%,.88),hsla(${h},72%,48%,.92),hsla(${h},80%,30%,.97))`;
+      el.style.filter=
+        `drop-shadow(0 0 12px hsla(${h},80%,60%,.7))`+
+        ` drop-shadow(0 4px 8px rgba(0,0,0,.55))`;
       el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`;
       b._baseFilter=el.style.filter;
     }else{
-      // Barre néon
+      // Barre liquid glass
       const h=b.hue,len=Math.hypot(b.x2-b.x1,b.y2-b.y1);
       const ang=Math.atan2(b.y2-b.y1,b.x2-b.x1)*180/Math.PI;
       el.className='bump-w';
       el.style.width=len+'px';
       el.style.background=
         `linear-gradient(to bottom,`+
-        `hsl(${h},70%,78%),`+
-        `hsl(${h},75%,55%),`+
-        `hsl(${h},80%,38%))`;
+        `rgba(255,255,255,.38) 0%,`+
+        `hsla(${h},70%,58%,.75) 35%,`+
+        `hsla(${h},75%,40%,.9) 100%)`;
       el.style.boxShadow=
-        `0 0 14px hsl(${h},75%,55%),`+
-        `0 0 5px rgba(255,255,255,.35),`+
-        `0 3px 6px rgba(0,0,0,.5)`;
-      el.style.transform=`translate(${b.x1}px,${b.y1-6}px) rotate(${ang}deg)`;
+        `0 0 18px hsla(${h},75%,58%,.65),`+
+        `0 0 6px rgba(255,255,255,.2),`+
+        `0 4px 8px rgba(0,0,0,.55),`+
+        `inset 0 1px 3px rgba(255,255,255,.35)`;
+      el.style.transform=`translate(${b.x1}px,${b.y1-6.5}px) rotate(${ang}deg)`;
       b._baseFilter='';
     }
     bumpsEl.appendChild(el);
@@ -1018,7 +1048,7 @@ function domUpdateBalls(){
     const d=b.r*2;
     el.style.visibility='visible';
     el.style.width=d+'px';el.style.height=d+'px';
-    el.style.fontSize=Math.round(b.r*1.1)+'px';
+    el.style.fontSize=Math.round(b.r*.95)+'px';
     el.style.opacity=b.ghost?0.35:1;
     el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`;
     // Drapeau du pays (emoji — fonctionne en HTML/CSS)
