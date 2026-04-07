@@ -234,7 +234,6 @@ animation:flt 1s ease infinite alternate;}
 </head>
 <body>
 
-<button id="closeBtn" onclick="window.close()" title="Fermer" style="position:fixed;top:8px;right:10px;z-index:9999;background:rgba(255,60,60,.85);border:none;border-radius:50%;width:22px;height:22px;color:#fff;font-size:13px;cursor:pointer;line-height:22px;text-align:center;padding:0;-webkit-app-region:no-drag;">✕</button>
 <header class="hdr" style="-webkit-app-region:drag">
   <div class="brand">
     <div class="dot"></div>
@@ -752,7 +751,7 @@ window.addEventListener('resize',initCv);
 
 const R=()=>Math.max(16,Math.round(CW*0.032));
 const rnd=(a,b)=>a+Math.random()*(b-a);
-const SPD=3,MAXS=8,WE=0.82,BB=1.12;
+const SPD=2,MAXS=6,WE=0.82,BB=1.12;
 
 function clamp(b){
   const minS=b.slowed?SPD*.3:SPD;
@@ -790,21 +789,35 @@ function mkHole(){
     r:Math.max(14,Math.round(CW*.026)),t:0};
 }
 function mkBumps(){
-  const list=[];const n=4+Math.floor(Math.random()*3);
-  for(let i=0;i<n;i++){
+  const list=[];
+  const nHex=2+Math.floor(Math.random()*2); // 2-3 hexagones
+  const nBar=2+Math.floor(Math.random()*2); // 2-3 barres
+  const types=[...Array(nHex).fill('c'),...Array(nBar).fill('w')]
+    .sort(()=>Math.random()-.5); // mélanger
+
+  for(const type of types){
     let x,y,tr=0;
-    do{x=rnd(CW*.1,CW*.9);y=rnd(CH*.12,CH*.88);tr++;}
-    while(tr<40&&(Math.hypot(x-hole.x,y-hole.y)<hole.r*4||
-      list.some(b=>b.k==='c'&&Math.hypot(x-b.x,y-b.y)<48)));
-    if(Math.random()<.35){
-      const hw=Math.floor(rnd(0,360)),l=rnd(42,75);
+    // Anti-chevauchement : trou + autres bumps
+    do{
+      x=rnd(CW*.1,CW*.9);y=rnd(CH*.12,CH*.88);tr++;
+    }while(tr<60&&(
+      Math.hypot(x-hole.x,y-hole.y)<hole.r*4.5||
+      list.some(b=>{
+        if(b.k==='c') return Math.hypot(x-b.x,y-b.y)<56;
+        // distance au milieu de la barre
+        const mx=(b.x1+b.x2)/2,my=(b.y1+b.y2)/2;
+        return Math.hypot(x-mx,y-my)<60;
+      })
+    ));
+    if(type==='w'){
+      const hw=Math.floor(rnd(0,360)),l=rnd(44,72);
       const a=rnd(0,Math.PI);
       list.push({k:'w',x1:x-Math.cos(a)*l/2,y1:y-Math.sin(a)*l/2,
         x2:x+Math.cos(a)*l/2,y2:y+Math.sin(a)*l/2,
         col:`hsl(${hw},70%,58%)`,hue:hw,fl:0});
     }else{
       const hc=Math.floor(rnd(0,360));
-      list.push({k:'c',x,y,r:rnd(18,28),col:`hsl(${hc},80%,60%)`,hue:hc,fl:0});
+      list.push({k:'c',x,y,r:rnd(18,26),col:`hsl(${hc},80%,60%)`,hue:hc,fl:0});
     }
   }
   return list;
