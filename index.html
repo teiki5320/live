@@ -1002,8 +1002,8 @@ function drawBump(b){
     bd.addColorStop(0,fl?'#fff':b.col);bd.addColorStop(1,fl?'#fa0':'rgba(0,0,0,.7)');
     ctx.fillStyle=bd;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
   }else{
-    ctx.save();ctx.shadowBlur=fl?20:8;ctx.shadowColor=b.col;
-    ctx.strokeStyle=fl?'#fff':b.col;ctx.lineWidth=7;ctx.lineCap='round';
+    ctx.save();
+    ctx.strokeStyle=fl?'#fff':b.col;ctx.lineWidth=fl?9:7;ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(b.x1,b.y1);ctx.lineTo(b.x2,b.y2);ctx.stroke();
     ctx.restore();
   }
@@ -1052,12 +1052,12 @@ function drawBalls(){
     ctx.globalAlpha=alpha*.6;
     ctx.beginPath();ctx.arc(b.x-b.r*.25,b.y-b.r*.3,b.r*.35,0,Math.PI*2);
     ctx.fillStyle='#fff';ctx.fill();
-    // Flag emoji
+    // Letter A/B (pas d'emoji — fiabilité CEF Streamlabs)
     ctx.globalAlpha=alpha;
-    ctx.font=Math.round(b.r*.9)+'px serif';
+    ctx.font=`bold ${Math.round(b.r*.9)}px sans-serif`;
     ctx.textAlign='center';ctx.textBaseline='middle';
-    const flag=isA?(curA?curA.f:'🔵'):(curB?curB.f:'🔴');
-    ctx.fillText(flag,b.x,b.y);
+    ctx.fillStyle='#fff';
+    ctx.fillText(isA?'A':'B',b.x,b.y);
   }
   ctx.globalAlpha=1;
 }
@@ -1073,7 +1073,19 @@ function frame(){
   bumps.forEach(drawBump);
   drawTrails();
   drawSparks();
-  drawBalls();
+  try{drawBalls();}catch(e){
+    ctx.globalAlpha=1;
+    for(const b of balls){
+      if(!b||!b.alive)continue;
+      ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+      ctx.fillStyle=b.side==='A'?'#5bc8f5':'#f05555';ctx.fill();
+    }
+  }
+  // Debug overlay visible dans Streamlabs sans console
+  ctx.save();ctx.globalAlpha=.7;ctx.fillStyle='#fff';ctx.font='11px monospace';
+  ctx.textAlign='left';ctx.textBaseline='bottom';
+  ctx.fillText('balls:'+balls.length+' alive:'+balls.filter(b=>b&&b.alive).length+' CW:'+CW,4,CH-2);
+  ctx.restore();
   try{collide();balls.forEach(updBall);checkBubble();}catch(e){}
   posEl(elA,fA,balls[0]);
   posEl(elB,fB,balls[1]);
@@ -1127,6 +1139,7 @@ function nextRound(){
     fA.textContent=curA.f;fB.textContent=curB.f;
     hole=mkHole();bumps=mkBumps();
     balls=[mkBall('A'),mkBall('B')];
+    console.log('BALLS CREATED',balls.length,balls.map(b=>({x:Math.round(b.x),y:Math.round(b.y),alive:b.alive})));
     dsec=0;clearInterval(duelIv);
     duelIv=setInterval(()=>{dsec++;
       document.getElementById('dtimer').textContent=dsec+'s';},1000);
