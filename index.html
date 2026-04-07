@@ -63,7 +63,7 @@ border-bottom:1px solid rgba(255,255,255,.08);}
 .dtimer{font-size:1.9rem;font-weight:700;color:#f5c400;}
 
 /* ARENA */
-#arena{position:relative;overflow:hidden;
+#arena{position:relative;overflow:hidden;transform:translateZ(0);-webkit-transform:translateZ(0);
   background:radial-gradient(ellipse at 30% 20%,#1a1035 0%,#0d0d1e 55%,#091525 100%);}
 
 /* ── LIQUID GLASS BALLS ─── */
@@ -748,7 +748,7 @@ window.addEventListener('resize',initCv);
 
 const R=()=>Math.max(16,Math.round(CW*0.032));
 const rnd=(a,b)=>a+Math.random()*(b-a);
-const SPD=2,MAXS=6,WE=0.82,BB=1.12;
+const SPD=3,MAXS=8,WE=0.82,BB=1.12;
 
 function clamp(b){
   const minS=b.slowed?SPD*.3:SPD;
