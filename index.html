@@ -64,9 +64,31 @@ border-bottom:1px solid rgba(255,255,255,.08);}
 .dtimer{font-size:.95rem;font-weight:700;color:#f5c400;}
 
 /* ARENA */
-#arena{position:relative;width:100%;background:#0a0a14;overflow:hidden;}
-#arena canvas{display:block;} /* size set by JS width/height attributes */
-.marble{display:none;} /* billes dessinées sur canvas */
+#arena{position:relative;background:#111120;overflow:hidden;
+  background-image:radial-gradient(circle,rgba(255,255,255,.022) 1px,transparent 1px);
+  background-size:34px 34px;}
+.game-ball{position:absolute;top:0;left:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;color:#fff;pointer-events:none;visibility:hidden;
+  text-shadow:0 1px 3px rgba(0,0,0,.6);will-change:transform;}
+.ball-a{background:#5bc8f5;box-shadow:0 0 12px #5bc8f566;}
+.ball-b{background:#f05555;box-shadow:0 0 12px #f0555566;}
+.game-hole{position:absolute;top:0;left:0;border-radius:50%;
+  background:#000;border:2.5px solid #f5c400;visibility:hidden;
+  box-shadow:0 0 18px rgba(245,196,0,.35),inset 0 0 10px rgba(0,0,0,.9);}
+@keyframes hole-rot{to{transform:rotate(360deg)}}
+.game-hole::after{content:'';position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(rgba(245,196,0,.18) 0deg,transparent 60deg,rgba(245,196,0,.18) 120deg,transparent 180deg,rgba(245,196,0,.18) 240deg,transparent 300deg,rgba(245,196,0,.18) 360deg);
+  animation:hole-rot 4s linear infinite;}
+.bump-c{position:absolute;top:0;left:0;border-radius:50%;transition:filter .08s;}
+.bump-w{position:absolute;top:0;left:0;border-radius:4px;height:7px;transform-origin:left center;transition:filter .08s;}
+.bump-flash{filter:brightness(3) saturate(2);}
+.game-bubble{position:absolute;top:0;left:0;border-radius:50%;
+  display:none;align-items:center;justify-content:center;
+  border:2.5px solid rgba(255,255,150,.85);background:rgba(200,200,255,.3);
+  pointer-events:none;}
+#dbg{position:absolute;bottom:2px;left:4px;color:rgba(255,255,255,.8);
+  font:11px monospace;pointer-events:none;z-index:5;}
 
 .phase{padding:7px 14px;min-height:32px;font-size:.78rem;
 letter-spacing:.16em;color:rgba(245,196,0,.85);text-align:center;
@@ -227,9 +249,12 @@ animation:flt 1s ease infinite alternate;}
     <div class="dtimer" id="dtimer">—</div>
   </div>
   <div id="arena">
-    <canvas id="cv"></canvas>
-    <div class="marble ma" id="mA"><span class="flag" id="fA">🏳</span></div>
-    <div class="marble mb" id="mB"><span class="flag" id="fB">🏳</span></div>
+    <div id="hole-el" class="game-hole"></div>
+    <div id="bumps-el"></div>
+    <div id="bubble-el" class="game-bubble"></div>
+    <div id="ball-A" class="game-ball ball-a">A</div>
+    <div id="ball-B" class="game-ball ball-b">B</div>
+    <div id="dbg"></div>
   </div>
   <div class="phase" id="phase">En attente du prochain duel…</div>
 </section>
@@ -680,22 +705,21 @@ function spinReel(id, target, cb){
   },16);
 }
 
-// ── CANVAS + PHYSIQUE ────────────────────────────────────────
-const arena=document.getElementById('arena');
-const cv=document.getElementById('cv');
-const ctx=cv.getContext('2d',{alpha:false});
-const elA=document.getElementById('mA');
-const elB=document.getElementById('mB');
-const fA=document.getElementById('fA');
-const fB=document.getElementById('fB');
+// ── DOM ARENA ────────────────────────────────────────────────
+const arenaEl=document.getElementById('arena');
+const holeEl=document.getElementById('hole-el');
+const bumpsEl=document.getElementById('bumps-el');
+const bubbleDomEl=document.getElementById('bubble-el');
+const ballElA=document.getElementById('ball-A');
+const ballElB=document.getElementById('ball-B');
+const dbgEl=document.getElementById('dbg');
 
 let CW=0,CH=0;
 function initCv(){
   const vw=document.documentElement.clientWidth||window.innerWidth||800;
   CW=Math.min(800,Math.max(320,vw-20));
   if(CW<=0){CW=800;CH=464;}else{CH=Math.round(CW*0.58);}
-  cv.width=CW;cv.height=CH;
-  cv.style.width=CW+'px';cv.style.height=CH+'px';
+  arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';
 }
 window.addEventListener('resize',initCv);
 
@@ -718,7 +742,7 @@ function seg(px,py,ax,ay,bx,by){
 }
 
 // Game state
-let balls=[],bumps=[],sparks=[],hole=null,lastFrameT=0;
+let balls=[],bumps=[],sparks=[],hole=null;
 let over=false,timers=[],duelIv=null,dsec=0;
 let curA=null,curB=null;
 
@@ -833,14 +857,9 @@ function collide(){
   }
 }
 
-function addSp(x,y,col,n=6){
-  for(let i=0;i<n;i++){
-    const a=Math.random()*Math.PI*2,s=rnd(1.5,4);
-    sparks.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,dec:rnd(.05,.1),sz:rnd(1.5,3.5),col});
-  }
-}
+function addSp(){} // no-op — sparks removed (canvas-less rendering)
 
-function posEl(el,flagEl,b){} // no-op — billes dessinées sur canvas
+function posEl(){} // no-op legacy
 
 // ── EVENT FUNCTIONS ───────────────────────────────────────────
 function updateEvCdUI(){
@@ -942,162 +961,82 @@ function triggerEvent(){
   }
 }
 
-// ── DRAW ─────────────────────────────────────────────────────
-function drawBG(){
-  ctx.globalAlpha=1;
-  ctx.fillStyle='#111120';
-  ctx.fillRect(0,0,CW,CH);
-  ctx.fillStyle='rgba(255,255,255,.018)';
-  for(let x=28;x<CW;x+=34)for(let y=28;y<CH;y+=34){
-    ctx.beginPath();ctx.arc(x,y,1,0,Math.PI*2);ctx.fill();
+// ── DOM RENDER ───────────────────────────────────────────────
+function domSetHole(){
+  if(!hole){holeEl.style.visibility='hidden';return;}
+  const d=hole.r*2;
+  holeEl.style.visibility='visible';
+  holeEl.style.width=d+'px';holeEl.style.height=d+'px';
+  holeEl.style.transform=`translate(${hole.x-hole.r}px,${hole.y-hole.r}px)`;
+}
+
+function domSetBumps(){
+  bumpsEl.innerHTML='';
+  for(const b of bumps){
+    const el=document.createElement('div');
+    b._el=el;
+    if(b.k==='c'){
+      el.className='bump-c';
+      const d=b.r*2;
+      el.style.width=d+'px';el.style.height=d+'px';
+      el.style.background=b.col;
+      el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`;
+    }else{
+      el.className='bump-w';
+      const len=Math.hypot(b.x2-b.x1,b.y2-b.y1);
+      const ang=Math.atan2(b.y2-b.y1,b.x2-b.x1)*180/Math.PI;
+      el.style.width=len+'px';el.style.background=b.col;
+      el.style.transform=`translate(${b.x1}px,${b.y1-3.5}px) rotate(${ang}deg)`;
+    }
+    bumpsEl.appendChild(el);
   }
 }
 
-function drawHole(){
-  if(!hole)return;
-  const{x,y,r}=hole;hole.t=(hole.t||0)+1;
-  // Glow simple sans gradient
-  ctx.globalAlpha=0.25;ctx.fillStyle='#f5c400';
-  ctx.beginPath();ctx.arc(x,y,r*2.8,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=1;
-  ctx.fillStyle='#000';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle=`rgba(255,200,50,${.55+Math.sin(hole.t*.09)*.28})`;
-  ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(x,y,r+1,0,Math.PI*2);ctx.stroke();
-  for(let i=0;i<6;i++){
-    const a=hole.t*.05+i*Math.PI/3;
-    ctx.strokeStyle='rgba(255,200,50,.18)';ctx.lineWidth=1.2;
-    ctx.beginPath();
-    ctx.moveTo(x+Math.cos(a)*r*.25,y+Math.sin(a)*r*.25);
-    ctx.lineTo(x+Math.cos(a)*r*.85,y+Math.sin(a)*r*.85);
-    ctx.stroke();
+function domUpdateBalls(){
+  const pairs=[[ballElA,balls[0]],[ballElB,balls[1]]];
+  for(const[el,b]of pairs){
+    if(!b||!b.alive){el.style.visibility='hidden';continue;}
+    const d=b.r*2;
+    el.style.visibility='visible';
+    el.style.width=d+'px';el.style.height=d+'px';
+    el.style.fontSize=Math.round(b.r*.8)+'px';
+    el.style.opacity=b.ghost?0.35:1;
+    el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`;
   }
-  ctx.globalAlpha=1;
 }
 
-function drawBubble(){
-  if(!bubble)return;
+function domUpdateBumpFlash(){
+  for(const b of bumps){
+    if(!b._el)continue;
+    if(b.fl>0){b.fl--;b._el.classList.add('bump-flash');}
+    else b._el.classList.remove('bump-flash');
+  }
+}
+
+function domSetBubble(){
+  if(!bubble){bubbleDomEl.style.display='none';return;}
   bubble.t=(bubble.t||0)+1;
   bubble.alpha=Math.min(1,(bubble.alpha||0)+.04);
-  const{x,y,r,t,event,alpha}=bubble;
-  const pulse=r+Math.sin(t*.08)*3;
-  ctx.save();ctx.globalAlpha=alpha;
-  // Glow simple
-  ctx.globalAlpha=alpha*.3;ctx.fillStyle='#ffff88';
-  ctx.beginPath();ctx.arc(x,y,pulse*2.5,0,Math.PI*2);ctx.fill();
-  // Bulle
-  ctx.globalAlpha=alpha*.6;ctx.fillStyle='#c8c8ff';
-  ctx.beginPath();ctx.arc(x,y,pulse,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=alpha;
-  ctx.strokeStyle=`rgba(255,255,150,${.6+Math.sin(t*.12)*.3})`;
-  ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(x,y,pulse,0,Math.PI*2);ctx.stroke();
-  ctx.font=`${Math.round(r*1.15)}px sans-serif`;
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillStyle='#fff';ctx.fillText(event.emoji,x,y);
-  ctx.restore();
-}
-
-function drawBump(b){
-  const fl=b.fl>0;if(b.fl>0)b.fl--;
-  if(b.k==='c'){
-    // Glow simple
-    ctx.globalAlpha=fl?.45:.2;ctx.fillStyle=fl?'#ffffc8':b.col;
-    ctx.beginPath();ctx.arc(b.x,b.y,b.r*2,0,Math.PI*2);ctx.fill();
-    ctx.globalAlpha=1;
-    ctx.fillStyle=fl?'#fff':b.col;
-    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
-  }else{
-    ctx.save();
-    ctx.strokeStyle=fl?'#fff':b.col;ctx.lineWidth=fl?9:7;ctx.lineCap='round';
-    ctx.beginPath();ctx.moveTo(b.x1,b.y1);ctx.lineTo(b.x2,b.y2);ctx.stroke();
-    ctx.restore();
+  const r=bubble.r+Math.sin(bubble.t*.08)*3,d=r*2;
+  bubbleDomEl.style.display='flex';
+  bubbleDomEl.style.opacity=bubble.alpha;
+  bubbleDomEl.style.width=d+'px';bubbleDomEl.style.height=d+'px';
+  bubbleDomEl.style.fontSize=Math.round(r*1.1)+'px';
+  bubbleDomEl.style.transform=`translate(${bubble.x-r}px,${bubble.y-r}px)`;
+  if(bubbleDomEl._ev!==bubble.event){
+    bubbleDomEl.textContent=bubble.event.emoji;
+    bubbleDomEl._ev=bubble.event;
   }
-  ctx.globalAlpha=1;
-}
-
-function drawTrails(){
-  balls.forEach(b=>{
-    if(!b.alive||!b.trail.length)return;
-    const col=b.side==='A'?'91,200,245':'240,85,85';
-    b.trail.forEach((pt,i)=>{
-      const al=(i/b.trail.length)*.18,sz=b.r*(i/b.trail.length)*.4;
-      if(sz<.5)return;
-      ctx.beginPath();ctx.arc(pt.x,pt.y,sz,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${col},${al})`;ctx.fill();
-    });
-  });
-}
-
-function drawSparks(){
-  for(let i=sparks.length-1;i>=0;i--){
-    const p=sparks[i];
-    p.x+=p.vx;p.y+=p.vy;p.vy+=.04;p.life-=p.dec;
-    ctx.beginPath();ctx.arc(p.x,p.y,Math.max(.1,p.sz*p.life),0,Math.PI*2);
-    ctx.fillStyle=p.col;ctx.globalAlpha=p.life;ctx.fill();
-    if(p.life<=0)sparks.splice(i,1);
-  }
-  ctx.globalAlpha=1;
-}
-
-// ── BALLS (canvas draw) ───────────────────────────────────────
-function drawBalls(){
-  ctx.globalAlpha=1;
-  for(const b of balls){
-    if(!b||!b.alive)continue;
-    const isA=b.side==='A';
-    const alpha=b.ghost?0.35:1;
-    // Glow
-    ctx.globalAlpha=alpha*.5;
-    ctx.beginPath();ctx.arc(b.x,b.y,b.r+6,0,Math.PI*2);
-    ctx.fillStyle=isA?'#5bc8f5':'#f05555';ctx.fill();
-    // Ball
-    ctx.globalAlpha=alpha;
-    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-    ctx.fillStyle=isA?'#5bc8f5':'#f05555';ctx.fill();
-    // Specular
-    ctx.globalAlpha=alpha*.6;
-    ctx.beginPath();ctx.arc(b.x-b.r*.25,b.y-b.r*.3,b.r*.35,0,Math.PI*2);
-    ctx.fillStyle='#fff';ctx.fill();
-    // Letter A/B (pas d'emoji — fiabilité CEF Streamlabs)
-    ctx.globalAlpha=alpha;
-    ctx.font=`bold ${Math.round(b.r*.9)}px sans-serif`;
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='#fff';
-    ctx.fillText(isA?'A':'B',b.x,b.y);
-  }
-  ctx.globalAlpha=1;
 }
 
 // ── RENDER LOOP ───────────────────────────────────────────────
-// setInterval au lieu de requestAnimationFrame : fonctionne même si
-// le navigateur embarqué (OBS, Streamlabs, TikTok) throttle RAF
 function frame(){
-  lastFrameT=performance.now();
-  // Chaque appel draw dans son propre try/catch — une erreur n'arrête pas tout
-  try{drawBG();}catch(e){ctx.clearRect(0,0,CW,CH);}
-  try{drawHole();}catch(e){}
-  try{drawBubble();}catch(e){}
-  try{bumps.forEach(drawBump);}catch(e){}
-  try{drawTrails();}catch(e){}
-  try{drawSparks();}catch(e){}
-  try{drawBalls();}catch(e){
-    // Fallback ultra-basique
-    ctx.globalAlpha=1;
-    for(const b of balls){
-      if(!b||!b.alive)continue;
-      ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-      ctx.fillStyle=b.side==='A'?'#5bc8f5':'#f05555';ctx.fill();
-    }
-  }
-  // Debug overlay
-  try{
-    ctx.globalAlpha=1;ctx.fillStyle='#fff';ctx.font='11px monospace';
-    ctx.textAlign='left';ctx.textBaseline='bottom';
-    const frz=balls.filter(b=>b&&b.frozen).length;
-    ctx.fillText('balls:'+balls.length+' alive:'+balls.filter(b=>b&&b.alive).length+(frz?' frz:'+frz:'')+' CW:'+CW,4,CH-2);
-  }catch(e){}
+  domUpdateBalls();
+  domUpdateBumpFlash();
+  domSetBubble();
+  const frz=balls.filter(b=>b&&b.frozen).length;
+  dbgEl.textContent='balls:'+balls.length+' alive:'+balls.filter(b=>b&&b.alive).length+(frz?' frz:'+frz:'')+' CW:'+CW;
   try{collide();balls.forEach(updBall);checkBubble();}catch(e){}
-  posEl(elA,fA,balls[0]);
-  posEl(elB,fB,balls[1]);
 }
 setInterval(frame,16); // ~60fps, fiable dans tous les contextes embarqués
 // visibilitychange désactivé — le jeu doit tourner même en arrière-plan
@@ -1141,11 +1080,10 @@ function nextRound(){
   curA=cA;curB=cB;
 
   // Créer les billes IMMÉDIATEMENT (frozen=true = immobiles pendant le tirage)
-  // Cela évite tout problème de timing/setTimeout dans les WebViews embarquées
   hole=mkHole();bumps=mkBumps();
   balls=[mkBall('A'),mkBall('B')];
   balls.forEach(b=>{b.frozen=true;});
-  fA.textContent=curA.f;fB.textContent=curB.f;
+  domSetHole();domSetBumps();
   console.log('BALLS READY (frozen)',balls.length);
 
   // Roues visuelles
@@ -1189,7 +1127,7 @@ let _booted=false;
 function boot(){
   if(_booted)return;_booted=true;
   initCv();
-  if(CW<=0){CW=800;CH=464;cv.width=CW;cv.height=CH;}
+  if(CW<=0){CW=800;CH=464;arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';}
   console.log('AFROTOK BOOT',CW,CH);
   // setInterval(frame,16) est déjà lancé en global — pas besoin d'appeler frame() ici
   initEvCdInterval();
