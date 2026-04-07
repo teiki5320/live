@@ -80,15 +80,13 @@ border-bottom:1px solid rgba(255,255,255,.08);}
 .game-hole::after{content:'';position:absolute;inset:0;border-radius:50%;
   background:conic-gradient(rgba(245,196,0,.18) 0deg,transparent 60deg,rgba(245,196,0,.18) 120deg,transparent 180deg,rgba(245,196,0,.18) 240deg,transparent 300deg,rgba(245,196,0,.18) 360deg);
   animation:hole-rot 4s linear infinite;}
-.bump-c{position:absolute;top:0;left:0;border-radius:50%;transition:filter .08s,transform .08s;}
-.bump-w{position:absolute;top:0;left:0;border-radius:5px;height:10px;transform-origin:left center;transition:filter .08s;}
-.bump-flash{filter:brightness(3.5) saturate(2);transform:scale(1.18) !important;}
+.bump-c{position:absolute;top:0;left:0;border-radius:50%;transition:filter .1s;}
+.bump-w{position:absolute;top:0;left:0;border-radius:6px;height:12px;transform-origin:left center;transition:filter .1s;}
+.bump-flash{filter:brightness(4) saturate(2.5);}
 .game-bubble{position:absolute;top:0;left:0;border-radius:50%;
   display:none;align-items:center;justify-content:center;
   border:2.5px solid rgba(255,255,150,.85);background:rgba(200,200,255,.3);
   pointer-events:none;}
-#dbg{position:absolute;bottom:2px;left:4px;color:rgba(255,255,255,.8);
-  font:11px monospace;pointer-events:none;z-index:5;}
 
 .phase{padding:7px 14px;min-height:32px;font-size:.78rem;
 letter-spacing:.16em;color:rgba(245,196,0,.85);text-align:center;
@@ -254,7 +252,6 @@ animation:flt 1s ease infinite alternate;}
     <div id="bubble-el" class="game-bubble"></div>
     <div id="ball-A" class="game-ball ball-a">A</div>
     <div id="ball-B" class="game-ball ball-b">B</div>
-    <div id="dbg"></div>
   </div>
   <div class="phase" id="phase">En attente du prochain duel…</div>
 </section>
@@ -712,7 +709,7 @@ const bumpsEl=document.getElementById('bumps-el');
 const bubbleDomEl=document.getElementById('bubble-el');
 const ballElA=document.getElementById('ball-A');
 const ballElB=document.getElementById('ball-B');
-const dbgEl=document.getElementById('dbg');
+
 
 let CW=0,CH=0;
 function initCv(){
@@ -775,7 +772,7 @@ function mkBumps(){
         x2:x+Math.cos(a)*l/2,y2:y+Math.sin(a)*l/2,
         col:`hsl(${rnd(0,360)},65%,58%)`,fl:0});
     }else{
-      list.push({k:'c',x,y,r:rnd(10,16),col:`hsl(${rnd(0,360)},70%,58%)`,fl:0});
+      list.push({k:'c',x,y,r:rnd(16,26),col:`hsl(${rnd(0,360)},80%,62%)`,fl:0});
     }
   }
   return list;
@@ -992,7 +989,7 @@ function domSetBumps(){
       el.style.width=len+'px';
       el.style.background=b.col;
       el.style.boxShadow=`0 0 8px ${b.col},0 0 3px rgba(255,255,255,.4)`;
-      el.style.transform=`translate(${b.x1}px,${b.y1-5}px) rotate(${ang}deg)`;
+      el.style.transform=`translate(${b.x1}px,${b.y1-6}px) rotate(${ang}deg)`;
     }
     bumpsEl.appendChild(el);
   }
@@ -1043,8 +1040,6 @@ function frame(){
   domUpdateBalls();
   domUpdateBumpFlash();
   domSetBubble();
-  const frz=balls.filter(b=>b&&b.frozen).length;
-  dbgEl.textContent='balls:'+balls.length+' alive:'+balls.filter(b=>b&&b.alive).length+(frz?' frz:'+frz:'')+' CW:'+CW;
   try{collide();balls.forEach(updBall);checkBubble();}catch(e){}
 }
 setInterval(frame,16); // ~60fps, fiable dans tous les contextes embarqués
