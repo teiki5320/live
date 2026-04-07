@@ -71,8 +71,8 @@ border-bottom:1px solid rgba(255,255,255,.08);}
   display:flex;align-items:center;justify-content:center;
   font-weight:900;color:#fff;pointer-events:none;visibility:hidden;
   text-shadow:0 1px 3px rgba(0,0,0,.6);will-change:transform;}
-.ball-a{background:#5bc8f5;box-shadow:0 0 12px #5bc8f566;}
-.ball-b{background:#f05555;box-shadow:0 0 12px #f0555566;}
+.ball-a{background:radial-gradient(circle at 35% 35%,#a0e8ff,#3aabdf);box-shadow:0 0 16px #5bc8f577,0 3px 8px rgba(0,0,0,.5);}
+.ball-b{background:radial-gradient(circle at 35% 35%,#ff9090,#d83535);box-shadow:0 0 16px #f0555577,0 3px 8px rgba(0,0,0,.5);}
 .game-hole{position:absolute;top:0;left:0;border-radius:50%;
   background:#000;border:2.5px solid #f5c400;visibility:hidden;
   box-shadow:0 0 18px rgba(245,196,0,.35),inset 0 0 10px rgba(0,0,0,.9);}
@@ -80,9 +80,9 @@ border-bottom:1px solid rgba(255,255,255,.08);}
 .game-hole::after{content:'';position:absolute;inset:0;border-radius:50%;
   background:conic-gradient(rgba(245,196,0,.18) 0deg,transparent 60deg,rgba(245,196,0,.18) 120deg,transparent 180deg,rgba(245,196,0,.18) 240deg,transparent 300deg,rgba(245,196,0,.18) 360deg);
   animation:hole-rot 4s linear infinite;}
-.bump-c{position:absolute;top:0;left:0;border-radius:50%;transition:filter .08s;}
-.bump-w{position:absolute;top:0;left:0;border-radius:4px;height:7px;transform-origin:left center;transition:filter .08s;}
-.bump-flash{filter:brightness(3) saturate(2);}
+.bump-c{position:absolute;top:0;left:0;border-radius:50%;transition:filter .08s,transform .08s;}
+.bump-w{position:absolute;top:0;left:0;border-radius:5px;height:10px;transform-origin:left center;transition:filter .08s;}
+.bump-flash{filter:brightness(3.5) saturate(2);transform:scale(1.18) !important;}
 .game-bubble{position:absolute;top:0;left:0;border-radius:50%;
   display:none;align-items:center;justify-content:center;
   border:2.5px solid rgba(255,255,150,.85);background:rgba(200,200,255,.3);
@@ -723,7 +723,7 @@ function initCv(){
 }
 window.addEventListener('resize',initCv);
 
-const R=()=>Math.max(9,Math.round(CW*0.021));
+const R=()=>Math.max(16,Math.round(CW*0.032));
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const SPD=3,MAXS=8,WE=0.82,BB=1.12;
 
@@ -760,7 +760,7 @@ let hrDramaIv=null,hrDramaSec=30;
 
 function mkHole(){
   return{x:rnd(CW*.28,CW*.72),y:rnd(CH*.3,CH*.7),
-    r:Math.max(11,Math.round(CW*.022)),t:0};
+    r:Math.max(14,Math.round(CW*.026)),t:0};
 }
 function mkBumps(){
   const list=[];const n=4+Math.floor(Math.random()*3);
@@ -976,32 +976,41 @@ function domSetBumps(){
     const el=document.createElement('div');
     b._el=el;
     if(b.k==='c'){
+      // Pin creux : bague colorée + centre sombre
       el.className='bump-c';
       const d=b.r*2;
       el.style.width=d+'px';el.style.height=d+'px';
-      el.style.background=b.col;
+      el.style.border=`3px solid ${b.col}`;
+      el.style.background='rgba(10,10,20,0.75)';
+      el.style.boxShadow=`0 0 10px ${b.col}88,inset 0 0 4px ${b.col}44`;
       el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`;
     }else{
+      // Barre lumineuse
       el.className='bump-w';
       const len=Math.hypot(b.x2-b.x1,b.y2-b.y1);
       const ang=Math.atan2(b.y2-b.y1,b.x2-b.x1)*180/Math.PI;
-      el.style.width=len+'px';el.style.background=b.col;
-      el.style.transform=`translate(${b.x1}px,${b.y1-3.5}px) rotate(${ang}deg)`;
+      el.style.width=len+'px';
+      el.style.background=b.col;
+      el.style.boxShadow=`0 0 8px ${b.col},0 0 3px rgba(255,255,255,.4)`;
+      el.style.transform=`translate(${b.x1}px,${b.y1-5}px) rotate(${ang}deg)`;
     }
     bumpsEl.appendChild(el);
   }
 }
 
 function domUpdateBalls(){
-  const pairs=[[ballElA,balls[0]],[ballElB,balls[1]]];
-  for(const[el,b]of pairs){
-    if(!b||!b.alive){el.style.visibility='hidden';continue;}
+  const pairs=[[ballElA,balls[0],curA],[ballElB,balls[1],curB]];
+  for(const[el,b,country]of pairs){
+    if(!b||!b.alive||b.frozen){el.style.visibility='hidden';continue;}
     const d=b.r*2;
     el.style.visibility='visible';
     el.style.width=d+'px';el.style.height=d+'px';
-    el.style.fontSize=Math.round(b.r*.8)+'px';
+    el.style.fontSize=Math.round(b.r*1.1)+'px';
     el.style.opacity=b.ghost?0.35:1;
     el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`;
+    // Drapeau du pays (emoji — fonctionne en HTML/CSS)
+    const flag=country?country.f:(b.side==='A'?'🔵':'🔴');
+    if(el.textContent!==flag)el.textContent=flag;
   }
 }
 
