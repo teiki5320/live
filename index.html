@@ -82,9 +82,8 @@ border-bottom:1px solid rgba(255,255,255,.08);}
   animation:hole-rot 4s linear infinite;}
 .bump-c{position:absolute;top:0;left:0;
   clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
-  transition:filter .1s;}
-.bump-w{position:absolute;top:0;left:0;border-radius:6px;height:12px;transform-origin:left center;transition:filter .1s;}
-.bump-flash{filter:brightness(4) saturate(2.5);}
+  transition:filter .12s;}
+.bump-w{position:absolute;top:0;left:0;border-radius:6px;height:12px;transform-origin:left center;transition:filter .12s,box-shadow .12s;}
 .game-bubble{position:absolute;top:0;left:0;border-radius:50%;
   display:none;align-items:center;justify-content:center;
   border:2.5px solid rgba(255,255,150,.85);background:rgba(200,200,255,.3);
@@ -769,12 +768,14 @@ function mkBumps(){
     while(tr<40&&(Math.hypot(x-hole.x,y-hole.y)<hole.r*4||
       list.some(b=>b.k==='c'&&Math.hypot(x-b.x,y-b.y)<48)));
     if(Math.random()<.35){
-      const a=rnd(0,Math.PI),l=rnd(38,70);
+      const hw=Math.floor(rnd(0,360)),l=rnd(42,75);
+      const a=rnd(0,Math.PI);
       list.push({k:'w',x1:x-Math.cos(a)*l/2,y1:y-Math.sin(a)*l/2,
         x2:x+Math.cos(a)*l/2,y2:y+Math.sin(a)*l/2,
-        col:`hsl(${rnd(0,360)},65%,58%)`,fl:0});
+        col:`hsl(${hw},70%,58%)`,hue:hw,fl:0});
     }else{
-      list.push({k:'c',x,y,r:rnd(16,26),col:`hsl(${rnd(0,360)},80%,62%)`,fl:0});
+      const hc=Math.floor(rnd(0,360));
+      list.push({k:'c',x,y,r:rnd(18,28),col:`hsl(${hc},80%,60%)`,hue:hc,fl:0});
     }
   }
   return list;
@@ -975,21 +976,36 @@ function domSetBumps(){
     const el=document.createElement('div');
     b._el=el;
     if(b.k==='c'){
-      // Hexagone plein
+      // Hexagone avec relief 3D
+      const h=b.hue,d=b.r*2;
       el.className='bump-c';
-      const d=b.r*2;
       el.style.width=d+'px';el.style.height=d+'px';
-      el.style.background=b.col;
+      // Gradient simulant un éclairage haut-gauche
+      el.style.background=
+        `linear-gradient(145deg,`+
+        `hsl(${h},75%,80%) 0%,`+
+        `hsl(${h},80%,60%) 45%,`+
+        `hsl(${h},85%,38%) 100%)`;
+      el.style.filter=`drop-shadow(0 0 10px hsl(${h},80%,50%)) drop-shadow(0 3px 5px rgba(0,0,0,.6))`;
       el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`;
+      b._baseFilter=el.style.filter;
     }else{
-      // Barre lumineuse
-      el.className='bump-w';
-      const len=Math.hypot(b.x2-b.x1,b.y2-b.y1);
+      // Barre néon
+      const h=b.hue,len=Math.hypot(b.x2-b.x1,b.y2-b.y1);
       const ang=Math.atan2(b.y2-b.y1,b.x2-b.x1)*180/Math.PI;
+      el.className='bump-w';
       el.style.width=len+'px';
-      el.style.background=b.col;
-      el.style.boxShadow=`0 0 8px ${b.col},0 0 3px rgba(255,255,255,.4)`;
+      el.style.background=
+        `linear-gradient(to bottom,`+
+        `hsl(${h},70%,78%),`+
+        `hsl(${h},75%,55%),`+
+        `hsl(${h},80%,38%))`;
+      el.style.boxShadow=
+        `0 0 14px hsl(${h},75%,55%),`+
+        `0 0 5px rgba(255,255,255,.35),`+
+        `0 3px 6px rgba(0,0,0,.5)`;
       el.style.transform=`translate(${b.x1}px,${b.y1-6}px) rotate(${ang}deg)`;
+      b._baseFilter='';
     }
     bumpsEl.appendChild(el);
   }
@@ -1014,8 +1030,12 @@ function domUpdateBalls(){
 function domUpdateBumpFlash(){
   for(const b of bumps){
     if(!b._el)continue;
-    if(b.fl>0){b.fl--;b._el.classList.add('bump-flash');}
-    else b._el.classList.remove('bump-flash');
+    if(b.fl>0){
+      b.fl--;
+      b._el.style.filter='brightness(4) saturate(3)';
+    }else{
+      b._el.style.filter=b._baseFilter||'';
+    }
   }
 }
 
