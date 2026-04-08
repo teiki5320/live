@@ -56,7 +56,9 @@ width:100%;text-align:center;
 
 /* DUEL CARD */
 .dcard{width:100%;background:#18181f;
-border:1px solid rgba(255,255,255,.08);border-radius:28px;overflow:hidden;}
+border:1px solid rgba(255,255,255,.08);border-radius:28px;overflow:hidden;
+clip-path:inset(0 0 0 0 round 28px);-webkit-clip-path:inset(0 0 0 0 round 28px);
+transform:translateZ(0);-webkit-transform:translateZ(0);}
 .dhdr{padding:18px 28px;display:flex;justify-content:space-between;align-items:center;
 border-bottom:1px solid rgba(255,255,255,.08);}
 .dlbl{font-size:1.16rem;letter-spacing:.25em;color:rgba(232,232,238,.35)}
@@ -64,7 +66,6 @@ border-bottom:1px solid rgba(255,255,255,.08);}
 
 /* ARENA */
 #arena{position:relative;overflow:hidden;
-  clip-path:inset(0);-webkit-clip-path:inset(0);
   transform:translateZ(0);-webkit-transform:translateZ(0);
   background:radial-gradient(ellipse at 30% 20%,#1a1035 0%,#0d0d1e 55%,#091525 100%);}
 
@@ -1113,10 +1114,11 @@ function domSetBubble(){
 
 // ── RENDER LOOP ───────────────────────────────────────────────
 function frame(){
+  // Physique d'abord → position corrigée avant rendu
+  try{collide();balls.forEach(updBall);checkBubble();}catch(e){}
   domUpdateBalls();
   domUpdateBumpFlash();
   domSetBubble();
-  try{collide();balls.forEach(updBall);checkBubble();}catch(e){}
 }
 setInterval(frame,16); // ~60fps, fiable dans tous les contextes embarqués
 // visibilitychange désactivé — le jeu doit tourner même en arrière-plan
