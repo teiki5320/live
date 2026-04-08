@@ -1079,8 +1079,10 @@ function domUpdateBalls(){
     el.style.width=d+'px';el.style.height=d+'px';
     el.style.fontSize=Math.round(b.r*.95)+'px';
     el.style.opacity=b.ghost?0.35:1;
-    el.style.transform=`translate(${b.x-b.r}px,${b.y-b.r}px)`;
-    // Drapeau du pays (emoji — fonctionne en HTML/CSS)
+    // Clamp visuel : la bille ne dépasse jamais les bornes de l'arène
+    const rx=Math.max(0,Math.min(CW-d,b.x-b.r));
+    const ry=Math.max(0,Math.min(CH-d,b.y-b.r));
+    el.style.transform=`translate(${rx}px,${ry}px)`;
     const flag=country?country.f:(b.side==='A'?'🔵':'🔴');
     if(el.textContent!==flag)el.textContent=flag;
   }
