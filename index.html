@@ -56,9 +56,7 @@ width:100%;text-align:center;
 
 /* DUEL CARD */
 .dcard{width:100%;background:#18181f;
-border:1px solid rgba(255,255,255,.08);border-radius:28px;overflow:hidden;
-clip-path:inset(0 0 0 0 round 28px);-webkit-clip-path:inset(0 0 0 0 round 28px);
-transform:translateZ(0);-webkit-transform:translateZ(0);}
+border:1px solid rgba(255,255,255,.08);border-radius:28px;overflow:hidden;}
 .dhdr{padding:18px 28px;display:flex;justify-content:space-between;align-items:center;
 border-bottom:1px solid rgba(255,255,255,.08);}
 .dlbl{font-size:1.16rem;letter-spacing:.25em;color:rgba(232,232,238,.35)}
@@ -72,7 +70,7 @@ border-bottom:1px solid rgba(255,255,255,.08);}
 /* ── LIQUID GLASS BALLS ─── */
 .game-ball{position:absolute;top:0;left:0;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:1.4em;pointer-events:none;visibility:hidden;will-change:transform;
+  font-size:1.4em;pointer-events:none;visibility:hidden;
   border:1.5px solid rgba(255,255,255,.45);
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 .game-ball::before{content:’’;position:absolute;
@@ -746,6 +744,10 @@ function initCv(){
   CW=Math.min(1048,Math.max(600,vw-32));
   if(CW<=0){CW=1048;CH=925;}else{CH=Math.round(CW*0.883);}
   arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';
+  // Lire les vraies dimensions après layout — synchronise physique et visuel
+  const rw=arenaEl.offsetWidth,rh=arenaEl.offsetHeight;
+  if(rw>10)CW=rw;
+  if(rh>10)CH=rh;
 }
 window.addEventListener('resize',initCv);
 
