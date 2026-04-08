@@ -791,7 +791,7 @@ let hrDramaIv=null,hrDramaSec=30;
 
 function mkHole(){
   return{x:rnd(CW*.28,CW*.72),y:rnd(CH*.3,CH*.7),
-    r:Math.max(14,Math.round(CW*.026)),t:0};
+    r:Math.max(18,Math.round(CW*.038)),t:0};
 }
 function mkBumps(){
   const list=[];
@@ -1080,7 +1080,7 @@ function domUpdateBalls(){
     const d=b.r*2;
     el.style.visibility='visible';
     el.style.width=d+'px';el.style.height=d+'px';
-    el.style.fontSize=Math.round(b.r*.95)+'px';
+    el.style.fontSize=Math.round(b.r*1.35)+'px';
     el.style.opacity=b.ghost?0.35:1;
     // Clamp visuel : la bille ne dépasse jamais les bornes de l'arène
     const rx=Math.max(0,Math.min(CW-d,b.x-b.r));
