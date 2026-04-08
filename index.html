@@ -56,7 +56,8 @@ width:100%;text-align:center;
 
 /* DUEL CARD */
 .dcard{width:100%;background:#18181f;
-border:1px solid rgba(255,255,255,.08);border-radius:28px;overflow:hidden;}
+border:1px solid rgba(255,255,255,.08);border-radius:28px;overflow:hidden;
+flex-shrink:0;transform:translateZ(0);}
 .dhdr{padding:18px 28px;display:flex;justify-content:space-between;align-items:center;
 border-bottom:1px solid rgba(255,255,255,.08);}
 .dlbl{font-size:1.16rem;letter-spacing:.25em;color:rgba(232,232,238,.35)}
@@ -742,12 +743,14 @@ let CW=0,CH=0;
 function initCv(){
   const vw=document.documentElement.clientWidth||window.innerWidth||1080;
   CW=Math.min(1048,Math.max(600,vw-32));
-  if(CW<=0){CW=1048;CH=925;}else{CH=Math.round(CW*0.883);}
+  if(CW<=0){CW=1048;CH=818;}else{CH=Math.round(CW*0.78);}
   arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';
-  // Lire les vraies dimensions après layout — synchronise physique et visuel
-  const rw=arenaEl.offsetWidth,rh=arenaEl.offsetHeight;
-  if(rw>10)CW=rw;
-  if(rh>10)CH=rh;
+  // Resync sur la hauteur vraiment rendue (après flex layout)
+  setTimeout(()=>{
+    const h=arenaEl.offsetHeight,w=arenaEl.offsetWidth;
+    if(h>10)CH=h;
+    if(w>10)CW=w;
+  },100);
 }
 window.addEventListener('resize',initCv);
 
@@ -1213,7 +1216,7 @@ let _booted=false;
 function boot(){
   if(_booted)return;_booted=true;
   initCv();
-  if(CW<=0){CW=1048;CH=925;arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';}
+  if(CW<=0){CW=1048;CH=818;arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';}
   console.log('AFROTOK BOOT',CW,CH);
   // setInterval(frame,16) est déjà lancé en global — pas besoin d'appeler frame() ici
   initEvCdInterval();
