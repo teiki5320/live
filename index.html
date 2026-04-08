@@ -725,11 +725,11 @@ function initCv(){
   CW=Math.min(1048,Math.max(600,vw-32));
   if(CW<=0){CW=1048;CH=818;}else{CH=Math.round(CW*0.78);}
   arenaEl.style.width=CW+'px';arenaEl.style.height=CH+'px';
-  // Resync sur la hauteur vraiment rendue (après flex layout)
+  // Resync sur la hauteur vraiment rendue — seulement si valeur plausible
   setTimeout(()=>{
     const h=arenaEl.offsetHeight,w=arenaEl.offsetWidth;
-    if(h>10)CH=h;
-    if(w>10)CW=w;
+    if(h>CH*0.8)CH=h;
+    if(w>CW*0.8)CW=w;
   },100);
 }
 window.addEventListener('resize',initCv);
@@ -854,7 +854,7 @@ function updBall(b){
   }
 
   // Hole check — only when hole exists
-  if(!over&&hole&&Math.hypot(b.x-hole.x,b.y-hole.y)<hole.r+b.r*.25){
+  if(!over&&hole&&Math.hypot(b.x-hole.x,b.y-hole.y)<hole.r*.85){
     over=true;b.alive=false;
     addSp(hole.x,hole.y,'#FFD700',35);
     addSp(hole.x,hole.y,'#fff',12);
